@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { GitBranch, GitFork, Plus, Search } from "lucide-react";
+import { GitBranch, GitFork, Plus, Search, Layers, TrendingUp } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
 import type { Recipe } from "@/lib/rms-data";
@@ -21,14 +21,17 @@ function Branches() {
     variants: recipes.filter((r) => r.parentId).length,
     roots: recipes.filter((r) => !r.parentId).length,
     projects: projects.length,
+    released: recipes.filter((r) => r.status === "released").length,
   };
 
   const filteredProjects = activeProject === "all" ? projects : projects.filter((p) => p === activeProject);
 
   return (
     <div className="space-y-5">
+      {/* Hero */}
       <div className="glass-panel relative overflow-hidden rounded-2xl p-6">
         <div className="pointer-events-none absolute -right-20 top-0 h-48 w-48 rounded-full bg-info/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-info">Version tree</div>
@@ -39,20 +42,25 @@ function Branches() {
             <Plus className="h-3.5 w-3.5" /> Branch a variant
           </button>
         </div>
-        <div className="relative mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Baseline recipes", value: totals.roots },
-            { label: "Variants in tree", value: totals.variants },
-            { label: "Projects tracked", value: totals.projects },
+            { label: "Baselines", value: totals.roots, icon: GitFork, tone: "text-primary" },
+            { label: "Variants", value: totals.variants, icon: GitBranch, tone: "text-info" },
+            { label: "Projects", value: totals.projects, icon: Layers, tone: "text-accent" },
+            { label: "Released", value: totals.released, icon: TrendingUp, tone: "text-success" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border/60 bg-card/40 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</div>
+                <s.icon className={`h-3.5 w-3.5 ${s.tone}`} />
+              </div>
               <div className="mt-1 font-mono text-xl font-semibold">{s.value}</div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Filters */}
       <div className="glass-panel flex flex-wrap items-center gap-2 rounded-2xl p-3">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -61,10 +69,10 @@ function Branches() {
         </div>
         <div className="flex flex-wrap gap-1.5">
           <button onClick={() => setActiveProject("all")}
-            className={`rounded-lg border px-2.5 py-1 text-[11px] uppercase tracking-wider ${activeProject === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground"}`}>All projects</button>
+            className={`rounded-lg border px-2.5 py-1 text-[11px] uppercase tracking-wider ${activeProject === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground"}`}>All</button>
           {projects.map((p) => (
             <button key={p} onClick={() => setActiveProject(p)}
-              className={`rounded-lg border px-2.5 py-1 text-[11px] ${activeProject === p ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground"}`}>{p}</button>
+              className={`rounded-lg border px-2.5 py-1 text-[11px] ${activeProject === p ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground"}`}>{p}</button>
           ))}
         </div>
       </div>
@@ -72,18 +80,20 @@ function Branches() {
       {filteredProjects.map((p) => {
         const rs = recipes.filter((r) => r.project === p);
         const roots = rs.filter((r) => !r.parentId);
+        const released = rs.filter((r) => r.status === "released").length;
         return (
           <div key={p} className="glass-panel rounded-2xl p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-info/20 text-primary">
+            <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-info/20 text-primary">
                   <GitFork className="h-4 w-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold">{p}</h3>
-                  <div className="text-[11px] text-muted-foreground">{rs.length} nodes · {rs.filter((r) => r.parentId).length} variants</div>
+                  <div className="text-[11px] text-muted-foreground">{rs.length} nodes · {rs.filter((r) => r.parentId).length} variants · {released} released</div>
                 </div>
               </div>
+              <span className="rounded-full bg-info/10 px-3 py-1 font-mono text-[10px] text-info">{roots.length} root{roots.length !== 1 ? "s" : ""}</span>
             </div>
             <div className="space-y-3">
               {roots.map((root) => <BranchNode key={root.id} r={root} all={rs} depth={0} filter={q} />)}
@@ -105,8 +115,8 @@ function BranchNode({ r, all, depth, filter }: { r: Recipe; all: Recipe[]; depth
   return (
     <div>
       <Link to="/recipes/$id" params={{ id: r.id }}
-        className={`group relative flex items-center gap-3 rounded-xl border p-3 transition hover:border-primary/40 hover:bg-card/70 ${matches ? "border-border/60 bg-card/40" : "border-border/40 bg-card/20 opacity-60"}`}>
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${isRoot ? "bg-primary/15 text-primary" : "bg-info/10 text-info"}`}>
+        className={`group relative flex items-center gap-3 rounded-xl border p-3 transition hover:border-primary/40 hover:bg-card/70 hover:shadow-lg hover:shadow-primary/5 ${matches ? "border-border/60 bg-card/40" : "border-border/40 bg-card/20 opacity-60"}`}>
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${isRoot ? "bg-primary/15 text-primary" : "bg-info/10 text-info"}`}>
           {isRoot ? <GitFork className="h-4 w-4" /> : <GitBranch className="h-4 w-4" />}
         </div>
         <div className="min-w-0 flex-1">
@@ -114,18 +124,28 @@ function BranchNode({ r, all, depth, filter }: { r: Recipe; all: Recipe[]; depth
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{r.code} · {r.version}</span>
             {isRoot && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">baseline</span>}
             {r.branchLabel && <span className="rounded bg-info/10 px-1.5 py-0.5 text-[10px] text-info">↳ {r.branchLabel}</span>}
+            {kids.length > 0 && <span className="rounded bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">{kids.length} child{kids.length !== 1 ? "ren" : ""}</span>}
           </div>
           <div className="mt-0.5 text-sm font-medium">{r.name}</div>
-          <div className="text-[11px] text-muted-foreground">{r.items.length} components · {r.process.length} process steps · updated {r.updatedAt}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+            <span>{r.items.length} components</span>
+            <span>·</span>
+            <span>{r.process.length} process steps</span>
+            <span>·</span>
+            <span>updated {r.updatedAt}</span>
+          </div>
         </div>
-        <StatusPill status={r.status} />
+        <div className="flex flex-col items-end gap-1">
+          <StatusPill status={r.status} />
+          <span className="font-mono text-[10px] text-muted-foreground">{r.targetYield.value}{r.targetYield.unit}</span>
+        </div>
       </Link>
       {kids.length > 0 && (
-        <div className="relative mt-2 space-y-2 pl-6">
-          <div className="pointer-events-none absolute left-4 top-0 h-full w-px bg-gradient-to-b from-info/40 via-info/20 to-transparent" />
+        <div className="relative mt-2 space-y-2 pl-8">
+          <div className="pointer-events-none absolute left-5 top-0 h-full w-px bg-gradient-to-b from-info/50 via-info/20 to-transparent" />
           {kids.map((k) => (
             <div key={k.id} className="relative">
-              <div className="pointer-events-none absolute -left-2 top-6 h-px w-4 bg-info/30" />
+              <div className="pointer-events-none absolute -left-3 top-8 h-px w-3 bg-info/40" />
               <BranchNode r={k} all={all} depth={depth + 1} filter={filter} />
             </div>
           ))}
