@@ -14,7 +14,7 @@ export const Route = createFileRoute("/recipes/")({
 const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "regulatory", "costing", "released", "abandoned"];
 
 function RecipesPage() {
-  const navigate = useNavigate();
+  const { recipes, materials, addRecipe, deleteRecipe } = useRms();
   const { recipes, materials, addRecipe, deleteRecipe } = useRms();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<RecipeStatus | "all">("all");
