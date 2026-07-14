@@ -9,38 +9,328 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkflowsRouteImport } from './routes/workflows'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as UnitsRouteImport } from './routes/units'
+import { Route as TrialsRouteImport } from './routes/trials'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SchemasRouteImport } from './routes/schemas'
+import { Route as RolesRouteImport } from './routes/roles'
+import { Route as RetentionRouteImport } from './routes/retention'
+import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as BranchesRouteImport } from './routes/branches'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as ApiKeysRouteImport } from './routes/api-keys'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
+import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
 
+const WorkflowsRoute = WorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnitsRoute = UnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialsRoute = TrialsRouteImport.update({
+  id: '/trials',
+  path: '/trials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchemasRoute = SchemasRouteImport.update({
+  id: '/schemas',
+  path: '/schemas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RolesRoute = RolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetentionRoute = RetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKeysRoute = ApiKeysRouteImport.update({
+  id: '/api-keys',
+  path: '/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesIndexRoute = RecipesIndexRouteImport.update({
+  id: '/recipes/',
+  path: '/recipes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesIdRoute = RecipesIdRouteImport.update({
+  id: '/recipes/$id',
+  path: '/recipes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api-keys': typeof ApiKeysRoute
+  '/audit': typeof AuditRoute
+  '/branches': typeof BranchesRoute
+  '/compare': typeof CompareRoute
+  '/materials': typeof MaterialsRoute
+  '/retention': typeof RetentionRoute
+  '/roles': typeof RolesRoute
+  '/schemas': typeof SchemasRoute
+  '/settings': typeof SettingsRoute
+  '/trials': typeof TrialsRoute
+  '/units': typeof UnitsRoute
+  '/users': typeof UsersRoute
+  '/workflows': typeof WorkflowsRoute
+  '/recipes/$id': typeof RecipesIdRoute
+  '/recipes/': typeof RecipesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api-keys': typeof ApiKeysRoute
+  '/audit': typeof AuditRoute
+  '/branches': typeof BranchesRoute
+  '/compare': typeof CompareRoute
+  '/materials': typeof MaterialsRoute
+  '/retention': typeof RetentionRoute
+  '/roles': typeof RolesRoute
+  '/schemas': typeof SchemasRoute
+  '/settings': typeof SettingsRoute
+  '/trials': typeof TrialsRoute
+  '/units': typeof UnitsRoute
+  '/users': typeof UsersRoute
+  '/workflows': typeof WorkflowsRoute
+  '/recipes/$id': typeof RecipesIdRoute
+  '/recipes': typeof RecipesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api-keys': typeof ApiKeysRoute
+  '/audit': typeof AuditRoute
+  '/branches': typeof BranchesRoute
+  '/compare': typeof CompareRoute
+  '/materials': typeof MaterialsRoute
+  '/retention': typeof RetentionRoute
+  '/roles': typeof RolesRoute
+  '/schemas': typeof SchemasRoute
+  '/settings': typeof SettingsRoute
+  '/trials': typeof TrialsRoute
+  '/units': typeof UnitsRoute
+  '/users': typeof UsersRoute
+  '/workflows': typeof WorkflowsRoute
+  '/recipes/$id': typeof RecipesIdRoute
+  '/recipes/': typeof RecipesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/api-keys'
+    | '/audit'
+    | '/branches'
+    | '/compare'
+    | '/materials'
+    | '/retention'
+    | '/roles'
+    | '/schemas'
+    | '/settings'
+    | '/trials'
+    | '/units'
+    | '/users'
+    | '/workflows'
+    | '/recipes/$id'
+    | '/recipes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/api-keys'
+    | '/audit'
+    | '/branches'
+    | '/compare'
+    | '/materials'
+    | '/retention'
+    | '/roles'
+    | '/schemas'
+    | '/settings'
+    | '/trials'
+    | '/units'
+    | '/users'
+    | '/workflows'
+    | '/recipes/$id'
+    | '/recipes'
+  id:
+    | '__root__'
+    | '/'
+    | '/api-keys'
+    | '/audit'
+    | '/branches'
+    | '/compare'
+    | '/materials'
+    | '/retention'
+    | '/roles'
+    | '/schemas'
+    | '/settings'
+    | '/trials'
+    | '/units'
+    | '/users'
+    | '/workflows'
+    | '/recipes/$id'
+    | '/recipes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiKeysRoute: typeof ApiKeysRoute
+  AuditRoute: typeof AuditRoute
+  BranchesRoute: typeof BranchesRoute
+  CompareRoute: typeof CompareRoute
+  MaterialsRoute: typeof MaterialsRoute
+  RetentionRoute: typeof RetentionRoute
+  RolesRoute: typeof RolesRoute
+  SchemasRoute: typeof SchemasRoute
+  SettingsRoute: typeof SettingsRoute
+  TrialsRoute: typeof TrialsRoute
+  UnitsRoute: typeof UnitsRoute
+  UsersRoute: typeof UsersRoute
+  WorkflowsRoute: typeof WorkflowsRoute
+  RecipesIdRoute: typeof RecipesIdRoute
+  RecipesIndexRoute: typeof RecipesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workflows': {
+      id: '/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof WorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/units': {
+      id: '/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof UnitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trials': {
+      id: '/trials'
+      path: '/trials'
+      fullPath: '/trials'
+      preLoaderRoute: typeof TrialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schemas': {
+      id: '/schemas'
+      path: '/schemas'
+      fullPath: '/schemas'
+      preLoaderRoute: typeof SchemasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roles': {
+      id: '/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof RolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retention': {
+      id: '/retention'
+      path: '/retention'
+      fullPath: '/retention'
+      preLoaderRoute: typeof RetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-keys': {
+      id: '/api-keys'
+      path: '/api-keys'
+      fullPath: '/api-keys'
+      preLoaderRoute: typeof ApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +338,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/': {
+      id: '/recipes/'
+      path: '/recipes'
+      fullPath: '/recipes/'
+      preLoaderRoute: typeof RecipesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes/$id': {
+      id: '/recipes/$id'
+      path: '/recipes/$id'
+      fullPath: '/recipes/$id'
+      preLoaderRoute: typeof RecipesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiKeysRoute: ApiKeysRoute,
+  AuditRoute: AuditRoute,
+  BranchesRoute: BranchesRoute,
+  CompareRoute: CompareRoute,
+  MaterialsRoute: MaterialsRoute,
+  RetentionRoute: RetentionRoute,
+  RolesRoute: RolesRoute,
+  SchemasRoute: SchemasRoute,
+  SettingsRoute: SettingsRoute,
+  TrialsRoute: TrialsRoute,
+  UnitsRoute: UnitsRoute,
+  UsersRoute: UsersRoute,
+  WorkflowsRoute: WorkflowsRoute,
+  RecipesIdRoute: RecipesIdRoute,
+  RecipesIndexRoute: RecipesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
