@@ -65,7 +65,7 @@ function RecipesPage() {
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Recipes</h1>
             <p className="mt-1 text-sm text-muted-foreground">Multi-level formulas with proportional or fixed scaling across every active R&amp;D project.</p>
           </div>
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
             <Plus className="h-3.5 w-3.5" /> New draft
           </button>
         </div>
