@@ -205,18 +205,36 @@ function Compare() {
                 </tr>
               </thead>
               <tbody>
-                {g.items.map((r) => (
-                  <tr key={r.key} className={`border-t border-border/40 ${rowTone(r)}`}>
-                    <td className="py-2 pl-4 pr-4">
-                      <div className="font-medium">{r.label}</div>
-                    </td>
-                    <td className="py-2 pr-4 text-right font-mono">{r.a !== undefined ? `${r.a}${r.unit ?? ""}` : "—"}</td>
-                    <td className="text-center text-muted-foreground"><ArrowLeftRight className="mx-auto h-3 w-3" /></td>
-                    <td className="py-2 pr-4 text-right font-mono">{r.b !== undefined ? `${r.b}${r.unit ?? ""}` : "—"}</td>
-                    <td className="py-2 pr-4 text-right font-mono text-muted-foreground">{r.a !== undefined && r.b !== undefined ? (r.b - r.a).toFixed(4) : "—"}</td>
-                    <td className={`py-2 pr-4 text-right font-mono ${r.a !== undefined && r.b !== undefined && r.a !== r.b ? "text-warning" : ""}`}>{delta(r.a, r.b)}</td>
-                  </tr>
-                ))}
+                {(() => {
+                  const maxAbs = Math.max(...g.items.map((x) => (x.a !== undefined && x.b !== undefined ? Math.abs((x.b as number) - (x.a as number)) : 0)), 1);
+                  return g.items.map((r) => {
+                    const both = r.a !== undefined && r.b !== undefined;
+                    const diff = both ? (r.b as number) - (r.a as number) : 0;
+                    const barPct = both ? Math.min((Math.abs(diff) / maxAbs) * 100, 100) : 0;
+                    const barTone = diff > 0 ? "bg-success/60" : diff < 0 ? "bg-destructive/60" : "bg-muted-foreground/40";
+                    return (
+                      <tr key={r.key} className={`border-t border-border/40 ${rowTone(r)}`}>
+                        <td className="py-2 pl-4 pr-4">
+                          <div className="font-medium">{r.label}</div>
+                        </td>
+                        <td className="py-2 pr-4 text-right font-mono">{r.a !== undefined ? `${r.a}${r.unit ?? ""}` : <span className="text-success">＋ new</span>}</td>
+                        <td className="text-center text-muted-foreground"><ArrowLeftRight className="mx-auto h-3 w-3" /></td>
+                        <td className="py-2 pr-4 text-right font-mono">{r.b !== undefined ? `${r.b}${r.unit ?? ""}` : <span className="text-destructive">− removed</span>}</td>
+                        <td className="py-2 pr-4">
+                          {both && diff !== 0 ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted/40">
+                                <div className={`h-full ${barTone}`} style={{ width: `${barPct}%` }} />
+                              </div>
+                              <span className="w-16 text-right font-mono text-xs text-muted-foreground">{diff > 0 ? "+" : ""}{diff.toFixed(3)}</span>
+                            </div>
+                          ) : <div className="text-right font-mono text-muted-foreground">—</div>}
+                        </td>
+                        <td className={`py-2 pr-4 text-right font-mono ${both && r.a !== r.b ? (diff > 0 ? "text-success" : "text-destructive") : "text-muted-foreground"}`}>{delta(r.a, r.b)}</td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
