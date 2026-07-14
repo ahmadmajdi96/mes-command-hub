@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowRight, Plus, Repeat, Ruler, Scale, Boxes, Hash } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, Plus, Repeat, Ruler, Scale, Boxes, Hash, Pencil, Trash2 } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
 import type { UnitDef } from "@/lib/rms-data";
+import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/units")({
   head: () => ({ meta: [{ title: "Units & Conversions · Cortanex RMS" }, { name: "description", content: "Universal conversion engine spanning mass, volume, counts and discretes." }] }),
@@ -13,11 +14,14 @@ const dimIcon = (d: string) => d === "Mass" ? Scale : d === "Volume" ? Ruler : d
 const dimTone = (d: string) => d === "Mass" ? "text-primary" : d === "Volume" ? "text-info" : d === "Count" ? "text-accent" : "text-success";
 
 function Units() {
-  const { units } = useRms();
+  const { units, addUnit, updateUnit, deleteUnit } = useRms();
   const dims = Array.from(new Set(units.map((u) => u.dimension)));
   const [amount, setAmount] = useState<number>(1);
   const [from, setFrom] = useState<UnitDef>(units[0]);
   const [to, setTo] = useState<UnitDef>(units[1]);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<UnitDef | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const convert = () => {
     if (from.dimension !== to.dimension) return NaN;
@@ -28,9 +32,25 @@ function Units() {
   const result = convert();
   const compatibleTo = units.filter((u) => u.dimension === from.dimension);
 
+  const fields = useMemo<FieldSpec[]>(() => [
+    { key: "name", label: "Unit name", type: "text", required: true, placeholder: "e.g. Ounce" },
+    { key: "symbol", label: "Symbol", type: "text", required: true, placeholder: "oz" },
+    { key: "dimension", label: "Dimension", type: "select", required: true, options: [
+      { value: "Mass", label: "Mass" }, { value: "Volume", label: "Volume" },
+      { value: "Count", label: "Count" }, { value: "Discrete", label: "Discrete" },
+    ] },
+    { key: "baseMultiplier", label: "Multiplier → base", type: "number", required: true, step: 0.000001, help: "How many base units (g / mL / ea) equal one of this unit" },
+  ], []);
+
+  const submit = (v: any) => {
+    const payload = { ...v, baseMultiplier: Number(v.baseMultiplier) || 1 };
+    if (editing) updateUnit(editing.id, payload);
+    else addUnit(payload);
+    setCreating(false); setEditing(null);
+  };
+
   return (
     <div className="space-y-5">
-      {/* Hero */}
       <div className="glass-panel relative overflow-hidden rounded-2xl p-6">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-3">
@@ -39,14 +59,13 @@ function Units() {
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Units &amp; Conversions</h1>
             <p className="mt-1 text-sm text-muted-foreground">User-defined multipliers across Mass, Volume, Count and Discrete dimensions.</p>
           </div>
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
             <Plus className="h-3.5 w-3.5" /> New unit
           </button>
         </div>
         <div className="relative mt-5 grid gap-3 sm:grid-cols-4">
           {dims.map((d) => {
-            const Icon = dimIcon(d);
-            const tone = dimTone(d);
+            const Icon = dimIcon(d); const tone = dimTone(d);
             const count = units.filter((u) => u.dimension === d).length;
             return (
               <div key={d} className="rounded-xl border border-border/60 bg-card/40 p-3">
@@ -62,7 +81,6 @@ function Units() {
         </div>
       </div>
 
-      {/* Live conversion sandbox */}
       <div className="glass-panel rounded-2xl p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Live conversion sandbox</h3>
@@ -108,11 +126,9 @@ function Units() {
         </div>
       </div>
 
-      {/* Dimension tables */}
       <div className="grid gap-4 lg:grid-cols-2">
         {dims.map((d) => {
-          const Icon = dimIcon(d);
-          const tone = dimTone(d);
+          const Icon = dimIcon(d); const tone = dimTone(d);
           const rows = units.filter((u) => u.dimension === d);
           const base = rows.reduce((a, u) => a.baseMultiplier < u.baseMultiplier ? a : u, rows[0]);
           return (
@@ -132,7 +148,7 @@ function Units() {
                     <th className="py-1.5 pr-3 font-medium">Unit</th>
                     <th className="py-1.5 pr-3 font-medium">Symbol</th>
                     <th className="py-1.5 pr-3 font-medium text-right">→ base</th>
-                    <th className="py-1.5 pr-3 font-medium">ID</th>
+                    <th className="py-1.5 pr-3 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,7 +157,12 @@ function Units() {
                       <td className="py-2 pr-3">{u.name}</td>
                       <td className="py-2 pr-3 font-mono">{u.symbol}</td>
                       <td className={`py-2 pr-3 text-right font-mono ${tone}`}>{u.baseMultiplier}</td>
-                      <td className="py-2 pr-3 font-mono text-[10px] text-muted-foreground">{u.id}</td>
+                      <td className="py-2 pr-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => setEditing(u)} className="rounded p-1 text-muted-foreground hover:bg-muted/40 hover:text-foreground"><Pencil className="h-3 w-3" /></button>
+                          <button onClick={() => setDeleteId(u.id)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -150,6 +171,22 @@ function Units() {
           );
         })}
       </div>
+
+      <EntityFormDialog<Partial<UnitDef>>
+        open={creating || !!editing}
+        onClose={() => { setCreating(false); setEditing(null); }}
+        title={editing ? `Edit ${editing.name}` : "New unit"}
+        fields={fields}
+        initial={editing ?? { dimension: "Mass", baseMultiplier: 1 }}
+        onSubmit={submit}
+      />
+      <ConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId && deleteUnit(deleteId)}
+        title="Delete unit?"
+        message="Recipes and materials referencing this unit symbol will keep the string but conversion may break."
+      />
     </div>
   );
 }

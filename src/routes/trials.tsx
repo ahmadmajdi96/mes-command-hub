@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
-import { Beaker, Plus, Save } from "lucide-react";
+import { Beaker, Plus, Pencil, Trash2 } from "lucide-react";
+import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
+import type { Trial } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/trials")({
   head: () => ({ meta: [{ title: "Research Trial Logs · Cortanex RMS" }, { name: "description", content: "Structured lab notebook capturing bench execution and fail-state history." }] }),
@@ -10,9 +12,36 @@ export const Route = createFileRoute("/trials")({
 });
 
 function Trials() {
-  const { trials, recipes, addTrial } = useRms();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ recipeId: recipes[0].id, batchCode: "", operator: "", observation: "", outcome: "pass" as const, color: 7, smell: 7, texture: 7 });
+  const { trials, recipes, addTrial, updateTrial, deleteTrial } = useRms();
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Trial | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const fields = useMemo<FieldSpec[]>(() => [
+    { key: "recipeId", label: "Recipe", type: "select", required: true, options: recipes.map((r) => ({ value: r.id, label: `${r.name} ${r.version}` })) },
+    { key: "batchCode", label: "Batch code", type: "text", required: true, placeholder: "LAB-24-0812" },
+    { key: "operator", label: "Operator", type: "text", required: true },
+    { key: "outcome", label: "Outcome", type: "select", required: true, options: [
+      { value: "pass", label: "Pass" }, { value: "fail", label: "Fail" }, { value: "inconclusive", label: "Inconclusive" },
+    ] },
+    { key: "observation", label: "Observation", type: "textarea", required: true, placeholder: "e.g. Batch separated at 40°C after 12 min mixing." },
+    { key: "color", label: "Color (1–10)", type: "number", min: 1, max: 10, step: 1 },
+    { key: "smell", label: "Smell (1–10)", type: "number", min: 1, max: 10, step: 1 },
+    { key: "texture", label: "Texture (1–10)", type: "number", min: 1, max: 10, step: 1 },
+  ], [recipes]);
+
+  const submit = (v: any) => {
+    const r = recipes.find((rr) => rr.id === v.recipeId)!;
+    const payload = {
+      recipeId: r.id, recipeName: `${r.name} ${r.version}`,
+      batchCode: v.batchCode, operator: v.operator, observation: v.observation, outcome: v.outcome,
+      sensory: { color: Number(v.color) || 5, smell: Number(v.smell) || 5, texture: Number(v.texture) || 5 },
+      analytics: [] as { key: string; value: number; unit: string }[],
+    };
+    if (editing) updateTrial(editing.id, payload);
+    else addTrial(payload);
+    setCreating(false); setEditing(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -21,49 +50,10 @@ function Trials() {
           <h1 className="font-display text-2xl font-semibold tracking-tight">Research Trial Logs</h1>
           <p className="text-sm text-muted-foreground">Real-time bench observations. Fail-state entries stay searchable for audit.</p>
         </div>
-        <button onClick={() => setOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
+        <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
           <Plus className="h-3.5 w-3.5" /> New trial entry
         </button>
       </div>
-
-      {open && (
-        <form
-          onSubmit={(e) => { e.preventDefault(); const r = recipes.find((rr) => rr.id === form.recipeId)!; addTrial({ recipeId: r.id, recipeName: `${r.name} ${r.version}`, batchCode: form.batchCode || "LAB-XX-0000", operator: form.operator || "—", observation: form.observation, outcome: form.outcome, sensory: { color: form.color, smell: form.smell, texture: form.texture }, analytics: [] }); setOpen(false); }}
-          className="glass-panel space-y-3 rounded-2xl p-5"
-        >
-          <div className="grid gap-3 md:grid-cols-4">
-            <label className="text-xs">Recipe
-              <select value={form.recipeId} onChange={(e) => setForm({ ...form, recipeId: e.target.value })} className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1.5 text-sm">
-                {recipes.map((r) => <option key={r.id} value={r.id}>{r.name} {r.version}</option>)}
-              </select>
-            </label>
-            <label className="text-xs">Batch code
-              <input value={form.batchCode} onChange={(e) => setForm({ ...form, batchCode: e.target.value })} className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1.5 text-sm" />
-            </label>
-            <label className="text-xs">Operator
-              <input value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value })} className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1.5 text-sm" />
-            </label>
-            <label className="text-xs">Outcome
-              <select value={form.outcome} onChange={(e) => setForm({ ...form, outcome: e.target.value as any })} className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1.5 text-sm">
-                <option value="pass">Pass</option>
-                <option value="fail">Fail</option>
-                <option value="inconclusive">Inconclusive</option>
-              </select>
-            </label>
-          </div>
-          <label className="block text-xs">Observation
-            <textarea rows={3} value={form.observation} onChange={(e) => setForm({ ...form, observation: e.target.value })} className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="e.g. Batch separated at 40°C." />
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {(["color", "smell", "texture"] as const).map((k) => (
-              <label key={k} className="text-xs capitalize">{k}: <span className="font-mono">{form[k]}</span>
-                <input type="range" min={1} max={10} value={form[k]} onChange={(e) => setForm({ ...form, [k]: Number(e.target.value) } as any)} className="mt-1 w-full accent-primary" />
-              </label>
-            ))}
-          </div>
-          <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"><Save className="h-3.5 w-3.5" /> Log trial</button>
-        </form>
-      )}
 
       <div className="grid gap-3 md:grid-cols-2">
         {trials.map((t) => (
@@ -75,7 +65,11 @@ function Trials() {
                 </div>
                 <Link to="/recipes/$id" params={{ id: t.recipeId }} className="mt-1 block text-sm font-semibold hover:underline">{t.recipeName}</Link>
               </div>
-              <StatusPill status={t.outcome} />
+              <div className="flex items-center gap-1">
+                <StatusPill status={t.outcome} />
+                <button onClick={() => setEditing(t)} className="rounded p-1 text-muted-foreground hover:bg-muted/40 hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setDeleteId(t.id)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+              </div>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{t.observation}</p>
             <div className="mt-3 grid grid-cols-3 gap-2">
@@ -100,6 +94,27 @@ function Trials() {
           </div>
         ))}
       </div>
+
+      <EntityFormDialog
+        open={creating || !!editing}
+        onClose={() => { setCreating(false); setEditing(null); }}
+        title={editing ? `Edit ${editing.id}` : "New trial entry"}
+        fields={fields}
+        initial={editing ? {
+          recipeId: editing.recipeId, batchCode: editing.batchCode, operator: editing.operator,
+          outcome: editing.outcome, observation: editing.observation,
+          color: editing.sensory.color, smell: editing.sensory.smell, texture: editing.sensory.texture,
+        } : { recipeId: recipes[0]?.id, outcome: "pass", color: 7, smell: 7, texture: 7 }}
+        onSubmit={submit}
+        submitLabel={editing ? "Save" : "Log trial"}
+      />
+      <ConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId && deleteTrial(deleteId)}
+        title="Delete trial log?"
+        message="This removes the entry from the notebook — regulatory audits may reference it."
+      />
     </div>
   );
 }

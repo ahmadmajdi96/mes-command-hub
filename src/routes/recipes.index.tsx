@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, LayoutGrid, Rows3, FlaskConical, TrendingUp, Layers, DollarSign } from "lucide-react";
+import { Search, Plus, LayoutGrid, Rows3, FlaskConical, TrendingUp, Layers, DollarSign, Trash2 } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
 import { recipeCost, groupedProjects, statusLabel, type RecipeStatus } from "@/lib/rms-data";
+import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/")({
   head: () => ({ meta: [{ title: "Recipes · Cortanex RMS" }, { name: "description", content: "Browse and open recipes across R&D projects." }] }),
@@ -13,10 +14,27 @@ export const Route = createFileRoute("/recipes/")({
 const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "regulatory", "costing", "released", "abandoned"];
 
 function RecipesPage() {
-  const { recipes, materials } = useRms();
+  const { recipes, materials, addRecipe, deleteRecipe } = useRms();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<RecipeStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [creating, setCreating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const fields = useMemo<FieldSpec[]>(() => [
+    { key: "name", label: "Recipe name", type: "text", required: true, placeholder: "e.g. Solvent-Free Sealant" },
+    { key: "code", label: "Code", type: "text", required: true, placeholder: "SEAL-V1" },
+    { key: "version", label: "Version", type: "text", required: true, placeholder: "v1.0" },
+    { key: "project", label: "Project", type: "text", required: true },
+    { key: "classification", label: "Classification", type: "text", required: true, placeholder: "e.g. Industrial Coating" },
+    { key: "branchLabel", label: "Branch label", type: "text", placeholder: "Baseline / Variant A" },
+    { key: "targetYieldValue", label: "Target yield", type: "number", required: true, step: 0.01 },
+    { key: "targetYieldUnit", label: "Yield unit", type: "text", required: true, placeholder: "kg / L" },
+    { key: "status", label: "Initial status", type: "select", required: true, options: [
+      { value: "draft", label: "Draft" }, { value: "review", label: "Peer Review" },
+    ] },
+    { key: "createdBy", label: "Created by", type: "text", required: true },
+  ], []);
 
   const filtered = useMemo(() => recipes.filter((r) =>
     (status === "all" || r.status === status) &&
@@ -46,7 +64,7 @@ function RecipesPage() {
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Recipes</h1>
             <p className="mt-1 text-sm text-muted-foreground">Multi-level formulas with proportional or fixed scaling across every active R&amp;D project.</p>
           </div>
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
             <Plus className="h-3.5 w-3.5" /> New draft
           </button>
         </div>
@@ -165,6 +183,7 @@ function RecipesPage() {
                 <th className="py-3 pr-3 font-medium text-right">Yield</th>
                 <th className="py-3 pr-3 font-medium text-right">Items</th>
                 <th className="py-3 pr-4 font-medium text-right">Cost</th>
+                <th className="py-3 pr-4 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -180,12 +199,44 @@ function RecipesPage() {
                   <td className="py-2.5 pr-3 text-right font-mono text-xs">{r.targetYield.value}{r.targetYield.unit}</td>
                   <td className="py-2.5 pr-3 text-right font-mono text-xs">{r.items.length}</td>
                   <td className="py-2.5 pr-4 text-right font-mono text-xs">${recipeCost(r, materials).toFixed(0)}</td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <button onClick={() => setDeleteId(r.id)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <EntityFormDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        title="New recipe draft"
+        subtitle="Add components and process steps after creating the recipe."
+        fields={fields}
+        initial={{ status: "draft", targetYieldValue: 1000, targetYieldUnit: "kg", createdBy: "M. Fahad" }}
+        onSubmit={(v: any) => {
+          const id = `REC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+          addRecipe({
+            id, code: v.code, name: v.name, version: v.version, project: v.project,
+            classification: v.classification, branchLabel: v.branchLabel || undefined,
+            status: v.status, createdBy: v.createdBy,
+            targetYield: { value: Number(v.targetYieldValue), unit: v.targetYieldUnit },
+            compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 180 },
+          } as any);
+          setCreating(false);
+        }}
+        submitLabel="Create draft"
+      />
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId && deleteRecipe(deleteId)}
+        title="Delete recipe?"
+        message="This permanently removes the recipe and its variant chain link."
+      />
     </div>
   );
 }
