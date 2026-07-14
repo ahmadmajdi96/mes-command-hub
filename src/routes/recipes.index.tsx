@@ -184,6 +184,7 @@ function RecipesPage() {
                 <th className="py-3 pr-3 font-medium text-right">Yield</th>
                 <th className="py-3 pr-3 font-medium text-right">Items</th>
                 <th className="py-3 pr-4 font-medium text-right">Cost</th>
+                <th className="py-3 pr-4 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -199,12 +200,44 @@ function RecipesPage() {
                   <td className="py-2.5 pr-3 text-right font-mono text-xs">{r.targetYield.value}{r.targetYield.unit}</td>
                   <td className="py-2.5 pr-3 text-right font-mono text-xs">{r.items.length}</td>
                   <td className="py-2.5 pr-4 text-right font-mono text-xs">${recipeCost(r, materials).toFixed(0)}</td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <button onClick={() => setDeleteId(r.id)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <EntityFormDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        title="New recipe draft"
+        subtitle="Add components and process steps after creating the recipe."
+        fields={fields}
+        initial={{ status: "draft", targetYieldValue: 1000, targetYieldUnit: "kg", createdBy: "M. Fahad" }}
+        onSubmit={(v: any) => {
+          const id = `REC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+          addRecipe({
+            id, code: v.code, name: v.name, version: v.version, project: v.project,
+            classification: v.classification, branchLabel: v.branchLabel || undefined,
+            status: v.status, createdBy: v.createdBy,
+            targetYield: { value: Number(v.targetYieldValue), unit: v.targetYieldUnit },
+            compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 180 },
+          } as any);
+          setCreating(false);
+        }}
+        submitLabel="Create draft"
+      />
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId && deleteRecipe(deleteId)}
+        title="Delete recipe?"
+        message="This permanently removes the recipe and its variant chain link."
+      />
     </div>
   );
 }
