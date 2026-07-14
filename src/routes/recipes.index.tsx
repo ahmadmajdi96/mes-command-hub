@@ -14,10 +14,28 @@ export const Route = createFileRoute("/recipes/")({
 const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "regulatory", "costing", "released", "abandoned"];
 
 function RecipesPage() {
-  const { recipes, materials } = useRms();
+  const navigate = useNavigate();
+  const { recipes, materials, addRecipe, deleteRecipe } = useRms();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<RecipeStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [creating, setCreating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const fields = useMemo<FieldSpec[]>(() => [
+    { key: "name", label: "Recipe name", type: "text", required: true, placeholder: "e.g. Solvent-Free Sealant" },
+    { key: "code", label: "Code", type: "text", required: true, placeholder: "SEAL-V1" },
+    { key: "version", label: "Version", type: "text", required: true, placeholder: "v1.0" },
+    { key: "project", label: "Project", type: "text", required: true },
+    { key: "classification", label: "Classification", type: "text", required: true, placeholder: "e.g. Industrial Coating" },
+    { key: "branchLabel", label: "Branch label", type: "text", placeholder: "Baseline / Variant A" },
+    { key: "targetYieldValue", label: "Target yield", type: "number", required: true, step: 0.01 },
+    { key: "targetYieldUnit", label: "Yield unit", type: "text", required: true, placeholder: "kg / L" },
+    { key: "status", label: "Initial status", type: "select", required: true, options: [
+      { value: "draft", label: "Draft" }, { value: "review", label: "Peer Review" },
+    ] },
+    { key: "createdBy", label: "Created by", type: "text", required: true },
+  ], []);
 
   const filtered = useMemo(() => recipes.filter((r) =>
     (status === "all" || r.status === status) &&
