@@ -24,8 +24,9 @@ export function GlobalSearch() {
 
   const go = (to: string, params?: Record<string, string>) => {
     setOpen(false);
-    // @ts-expect-error dynamic navigate
-    navigate(params ? { to, params } : { to });
+    (navigate as unknown as (opts: { to: string; params?: Record<string, string> }) => void)(
+      params ? { to, params } : { to }
+    );
   };
 
   return (
