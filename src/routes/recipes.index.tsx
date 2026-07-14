@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, Plus, LayoutGrid, Rows3, FlaskConical, TrendingUp, Layers, DollarSign, Trash2 } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
