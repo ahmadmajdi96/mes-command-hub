@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, LayoutGrid, Rows3, FlaskConical, TrendingUp, Layers, DollarSign } from "lucide-react";
+import { Search, Plus, LayoutGrid, Rows3, FlaskConical, TrendingUp, Layers, DollarSign, Trash2 } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
 import { recipeCost, groupedProjects, statusLabel, type RecipeStatus } from "@/lib/rms-data";
+import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/")({
   head: () => ({ meta: [{ title: "Recipes · Cortanex RMS" }, { name: "description", content: "Browse and open recipes across R&D projects." }] }),
