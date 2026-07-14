@@ -1,9 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Lock, Save, ChevronRight, GitBranch, Beaker, GitCompareArrows, ShieldCheck, Layers, DollarSign, Gauge, FlaskConical, ArrowUpRight, Clock, Users } from "lucide-react";
+import { Lock, Save, ChevronRight, GitBranch, Beaker, GitCompareArrows, ShieldCheck, Layers, DollarSign, Gauge, FlaskConical, ArrowUpRight, Clock, Users, Plus, Trash2, Pencil } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
-import { recipeCost, statusLabel, type RecipeStatus } from "@/lib/rms-data";
+import { recipeCost, statusLabel, type RecipeStatus, type RecipeItem, type ProcessStep, type Recipe } from "@/lib/rms-data";
+import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/$id")({
   head: ({ params }) => ({ meta: [{ title: `Recipe ${params.id} · Sandbox Formulator` }, { name: "description", content: "Multi-level formulation sandbox with live property rollup and scaling controls." }] }),
@@ -14,7 +15,12 @@ const GATE_ORDER: RecipeStatus[] = ["draft", "review", "regulatory", "costing", 
 
 function RecipeDetail() {
   const { id } = Route.useParams();
-  const { recipes, materials, updateRecipeItem, moveGate, role } = useRms();
+  const navigate = useNavigate();
+  const {
+    recipes, materials, updateRecipeItem, moveGate, role,
+    addRecipeItem, removeRecipeItem, updateRecipe, deleteRecipe,
+    addProcessStep, updateProcessStep, removeProcessStep,
+  } = useRms();
   const recipe = recipes.find((r) => r.id === id);
   if (!recipe) throw notFound();
 
@@ -22,6 +28,17 @@ function RecipeDetail() {
   const [scaleMode, setScaleMode] = useState<"proportional" | "locked">("proportional");
   const [anchorId, setAnchorId] = useState(recipe.items[0]?.id ?? "");
   const [tab, setTab] = useState<"formulation" | "process" | "compliance">("formulation");
+
+  const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
+  const [addingItem, setAddingItem] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+
+  const [editingStep, setEditingStep] = useState<ProcessStep | null>(null);
+  const [addingStep, setAddingStep] = useState(false);
+  const [deleteStepSeq, setDeleteStepSeq] = useState<number | null>(null);
+
+  const [editingMeta, setEditingMeta] = useState(false);
+  const [deleteRecipeOpen, setDeleteRecipeOpen] = useState(false);
 
   const locked = ["review", "regulatory", "costing", "released"].includes(recipe.status);
 
@@ -34,6 +51,47 @@ function RecipeDetail() {
 
   const currentGateIdx = GATE_ORDER.indexOf(recipe.status);
   const nextGate = currentGateIdx >= 0 && currentGateIdx < GATE_ORDER.length - 1 ? GATE_ORDER[currentGateIdx + 1] : null;
+
+  const itemFields = useMemo<FieldSpec[]>(() => [
+    { key: "refType", label: "Reference type", type: "select", required: true, options: [
+      { value: "material", label: "Material" }, { value: "recipe", label: "Sub-recipe" },
+    ] },
+    { key: "refId", label: "Reference", type: "select", required: true, options: [
+      ...materials.map((m) => ({ value: m.id, label: `${m.id} · ${m.name}` })),
+      ...recipes.filter((r) => r.id !== recipe.id).map((r) => ({ value: r.id, label: `${r.id} · ${r.name}` })),
+    ] },
+    { key: "name", label: "Display name", type: "text", required: true },
+    { key: "targetPct", label: "Target %", type: "number", required: true, step: 0.0001 },
+    { key: "minPct", label: "Min %", type: "number", step: 0.0001 },
+    { key: "maxPct", label: "Max %", type: "number", step: 0.0001 },
+    { key: "unit", label: "Unit", type: "text", required: true, placeholder: "kg / L / ea" },
+    { key: "scaling", label: "Scaling", type: "select", required: true, options: [
+      { value: "proportional", label: "Proportional" }, { value: "fixed", label: "Fixed" },
+    ] },
+  ], [materials, recipes, recipe.id]);
+
+  const stepFields = useMemo<FieldSpec[]>(() => [
+    { key: "phase", label: "Phase", type: "text", required: true, placeholder: "e.g. High-Shear Mixing" },
+    { key: "parameter", label: "Parameter", type: "text", required: true, placeholder: "RPM / Temperature" },
+    { key: "targetValue", label: "Target value", type: "number", required: true },
+    { key: "unit", label: "Unit", type: "text", required: true, placeholder: "rpm / °C" },
+    { key: "durationMin", label: "Duration (min)", type: "number", required: true, min: 0 },
+  ], []);
+
+  const metaFields = useMemo<FieldSpec[]>(() => [
+    { key: "name", label: "Recipe name", type: "text", required: true },
+    { key: "code", label: "Code", type: "text", required: true },
+    { key: "version", label: "Version", type: "text", required: true },
+    { key: "project", label: "Project", type: "text", required: true },
+    { key: "branchLabel", label: "Branch label", type: "text" },
+    { key: "classification", label: "Classification", type: "text", required: true },
+    { key: "targetYieldValue", label: "Target yield", type: "number", required: true, step: 0.01 },
+    { key: "targetYieldUnit", label: "Yield unit", type: "text", required: true },
+    { key: "storageMaxC", label: "Storage max (°C)", type: "number", required: true },
+    { key: "shelfLifeDays", label: "Shelf life (days)", type: "number", required: true, min: 0 },
+    { key: "hazards", label: "Hazards", type: "tags" },
+    { key: "allergens", label: "Allergens", type: "tags" },
+  ], []);
 
   return (
     <div className="space-y-5">
@@ -62,7 +120,11 @@ function RecipeDetail() {
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <StatusPill status={recipe.status} />
+            <div className="flex items-center gap-2">
+              <StatusPill status={recipe.status} />
+              <button onClick={() => setEditingMeta(true)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /> Edit</button>
+              <button onClick={() => setDeleteRecipeOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive hover:bg-destructive/20"><Trash2 className="h-3 w-3" /> Delete</button>
+            </div>
             {locked && <span className="inline-flex items-center gap-1 rounded-md bg-warning/10 px-2 py-1 text-[11px] text-warning"><Lock className="h-3 w-3" /> Fields locked</span>}
             {nextGate && !locked && (
               <button onClick={() => moveGate(recipe.id, nextGate)}
@@ -110,9 +172,7 @@ function RecipeDetail() {
         </div>
       </div>
 
-      {/* 3-pane workspace */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,340px)]">
-        {/* LEFT — project & version tree */}
         <aside className="glass-panel h-fit rounded-2xl p-4">
           <h4 className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground"><GitBranch className="h-3 w-3" /> Project tree</h4>
           <div className="mt-3 space-y-1 font-mono text-xs">
@@ -151,7 +211,6 @@ function RecipeDetail() {
           </div>
         </aside>
 
-        {/* MIDDLE — tabbed workspace */}
         <section className="glass-panel rounded-2xl">
           <div className="flex items-center gap-1 border-b border-border/60 px-2 pt-2">
             {(["formulation", "process", "compliance"] as const).map((t) => (
@@ -178,6 +237,7 @@ function RecipeDetail() {
                       <th className="py-2 pr-3 font-medium">Range</th>
                       <th className="py-2 pr-3 font-medium text-right">Scaled qty</th>
                       <th className="py-2 pr-3 font-medium">Scaling</th>
+                      <th className="py-2 pr-3 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -212,15 +272,22 @@ function RecipeDetail() {
                           <td className="py-2.5 pr-3">
                             <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${it.scaling === "fixed" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>{it.scaling}</span>
                           </td>
+                          <td className="py-2.5 pr-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <button disabled={locked} onClick={() => setEditingItem(it)} className="rounded p-1 text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-30"><Pencil className="h-3 w-3" /></button>
+                              <button disabled={locked} onClick={() => setDeleteItemId(it.id)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"><Trash2 className="h-3 w-3" /></button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-              <div className="mt-4 rounded-xl border border-dashed border-border/60 p-3 text-center text-[11px] text-muted-foreground">
-                Drag components from the catalog to add rows. Nested sub-recipes supported up to 5 levels.
-              </div>
+              <button disabled={locked} onClick={() => setAddingItem(true)}
+                className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 px-3 py-2.5 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-40">
+                <Plus className="h-3.5 w-3.5" /> Add component
+              </button>
             </div>
           )}
 
@@ -234,7 +301,11 @@ function RecipeDetail() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <div className="font-medium">{p.phase}</div>
-                        <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{p.durationMin} min</span>
+                        <div className="flex items-center gap-1">
+                          <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{p.durationMin} min</span>
+                          <button disabled={locked} onClick={() => setEditingStep(p)} className="rounded p-1 text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-30"><Pencil className="h-3 w-3" /></button>
+                          <button disabled={locked} onClick={() => setDeleteStepSeq(p.seq)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"><Trash2 className="h-3 w-3" /></button>
+                        </div>
                       </div>
                       <div className="mt-0.5 text-[11px] text-muted-foreground">
                         <span className="font-mono text-primary">{p.parameter}</span> = <span className="font-mono">{p.targetValue}{p.unit}</span>
@@ -243,6 +314,10 @@ function RecipeDetail() {
                   </div>
                 ))}
               </div>
+              <button disabled={locked} onClick={() => setAddingStep(true)}
+                className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 px-3 py-2.5 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-40">
+                <Plus className="h-3.5 w-3.5" /> Add process step
+              </button>
             </div>
           )}
 
@@ -271,7 +346,6 @@ function RecipeDetail() {
           )}
         </section>
 
-        {/* RIGHT — live calculations */}
         <aside className="glass-panel sticky top-4 h-fit rounded-2xl p-5">
           <h4 className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Live rollup</h4>
           <div className="mt-3 space-y-3">
@@ -331,6 +405,86 @@ function RecipeDetail() {
           </div>
         </aside>
       </div>
+
+      {/* Item dialog */}
+      <EntityFormDialog<Partial<RecipeItem>>
+        open={addingItem || !!editingItem}
+        onClose={() => { setAddingItem(false); setEditingItem(null); }}
+        title={editingItem ? `Edit ${editingItem.name}` : "Add component"}
+        fields={itemFields}
+        initial={editingItem ?? { refType: "material", scaling: "proportional", targetPct: 0, minPct: 0, maxPct: 100, unit: "kg" }}
+        onSubmit={(v: any) => {
+          const payload = {
+            refType: v.refType, refId: v.refId, name: v.name,
+            targetPct: Number(v.targetPct), minPct: Number(v.minPct), maxPct: Number(v.maxPct),
+            unit: v.unit, scaling: v.scaling,
+          };
+          if (editingItem) updateRecipeItem(recipe.id, editingItem.id, payload);
+          else addRecipeItem(recipe.id, payload);
+        }}
+      />
+      <ConfirmDialog
+        open={!!deleteItemId}
+        onClose={() => setDeleteItemId(null)}
+        onConfirm={() => deleteItemId && removeRecipeItem(recipe.id, deleteItemId)}
+        title="Remove component?"
+        message="This deletes the row from the current recipe version only."
+      />
+
+      {/* Step dialog */}
+      <EntityFormDialog<Partial<ProcessStep>>
+        open={addingStep || !!editingStep}
+        onClose={() => { setAddingStep(false); setEditingStep(null); }}
+        title={editingStep ? `Edit step ${editingStep.seq}` : "Add process step"}
+        fields={stepFields}
+        initial={editingStep ?? { unit: "°C", durationMin: 15 }}
+        onSubmit={(v: any) => {
+          const payload = { phase: v.phase, parameter: v.parameter, targetValue: Number(v.targetValue), unit: v.unit, durationMin: Number(v.durationMin) };
+          if (editingStep) updateProcessStep(recipe.id, editingStep.seq, payload);
+          else addProcessStep(recipe.id, payload);
+        }}
+      />
+      <ConfirmDialog
+        open={deleteStepSeq !== null}
+        onClose={() => setDeleteStepSeq(null)}
+        onConfirm={() => deleteStepSeq !== null && removeProcessStep(recipe.id, deleteStepSeq)}
+        title="Remove process step?"
+        message="Sequence numbers will re-index automatically."
+      />
+
+      {/* Meta dialog */}
+      <EntityFormDialog
+        open={editingMeta}
+        onClose={() => setEditingMeta(false)}
+        title="Edit recipe details"
+        fields={metaFields}
+        initial={{
+          name: recipe.name, code: recipe.code, version: recipe.version, project: recipe.project,
+          branchLabel: recipe.branchLabel ?? "", classification: recipe.classification,
+          targetYieldValue: recipe.targetYield.value, targetYieldUnit: recipe.targetYield.unit,
+          storageMaxC: recipe.compliance.storageMaxC, shelfLifeDays: recipe.compliance.shelfLifeDays,
+          hazards: recipe.compliance.hazards, allergens: recipe.compliance.allergens,
+        }}
+        onSubmit={(v: any) => {
+          updateRecipe(recipe.id, {
+            name: v.name, code: v.code, version: v.version, project: v.project,
+            branchLabel: v.branchLabel || undefined, classification: v.classification,
+            targetYield: { value: Number(v.targetYieldValue), unit: v.targetYieldUnit },
+            compliance: {
+              ...recipe.compliance,
+              storageMaxC: Number(v.storageMaxC), shelfLifeDays: Number(v.shelfLifeDays),
+              hazards: v.hazards ?? [], allergens: v.allergens ?? [],
+            },
+          } as Partial<Recipe>);
+        }}
+      />
+      <ConfirmDialog
+        open={deleteRecipeOpen}
+        onClose={() => setDeleteRecipeOpen(false)}
+        onConfirm={() => { deleteRecipe(recipe.id); navigate({ to: "/recipes" }); }}
+        title="Delete recipe?"
+        message="This permanently removes the recipe. Trials referencing it will remain but lose their live link."
+      />
     </div>
   );
 }
