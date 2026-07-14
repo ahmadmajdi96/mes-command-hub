@@ -15,7 +15,6 @@ const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "reg
 
 function RecipesPage() {
   const { recipes, materials, addRecipe, deleteRecipe } = useRms();
-  const { recipes, materials, addRecipe, deleteRecipe } = useRms();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<RecipeStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("grid");
