@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkflowsRouteImport } from './routes/workflows'
+import { Route as ValidationRouteImport } from './routes/validation'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as UnitsRouteImport } from './routes/units'
 import { Route as TrialsRouteImport } from './routes/trials'
@@ -29,6 +30,11 @@ import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
 const WorkflowsRoute = WorkflowsRouteImport.update({
   id: '/workflows',
   path: '/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidationRoute = ValidationRouteImport.update({
+  id: '/validation',
+  path: '/validation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UsersRoute = UsersRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
+  '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
+  '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes': typeof RecipesIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
+  '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/trials'
     | '/units'
     | '/users'
+    | '/validation'
     | '/workflows'
     | '/recipes/$id'
     | '/recipes/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/trials'
     | '/units'
     | '/users'
+    | '/validation'
     | '/workflows'
     | '/recipes/$id'
     | '/recipes'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/trials'
     | '/units'
     | '/users'
+    | '/validation'
     | '/workflows'
     | '/recipes/$id'
     | '/recipes/'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   TrialsRoute: typeof TrialsRoute
   UnitsRoute: typeof UnitsRoute
   UsersRoute: typeof UsersRoute
+  ValidationRoute: typeof ValidationRoute
   WorkflowsRoute: typeof WorkflowsRoute
   RecipesIdRoute: typeof RecipesIdRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/workflows'
       fullPath: '/workflows'
       preLoaderRoute: typeof WorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validation': {
+      id: '/validation'
+      path: '/validation'
+      fullPath: '/validation'
+      preLoaderRoute: typeof ValidationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/users': {
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrialsRoute: TrialsRoute,
   UnitsRoute: UnitsRoute,
   UsersRoute: UsersRoute,
+  ValidationRoute: ValidationRoute,
   WorkflowsRoute: WorkflowsRoute,
   RecipesIdRoute: RecipesIdRoute,
   RecipesIndexRoute: RecipesIndexRoute,

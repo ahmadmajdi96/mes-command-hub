@@ -35,7 +35,7 @@ function ValidationPage() {
     { key: "name", label: "Rule name", type: "text", required: true },
     { key: "kind", label: "Rule type", type: "select", required: true, options: KINDS },
     { key: "severity", label: "Severity", type: "select", required: true, options: [{ value: "error", label: "Error (blocks workflow)" }, { value: "warning", label: "Warning" }] },
-    { key: "config", label: "Parameters", type: "keyvalue" },
+    { key: "config", label: "Parameters", type: "kv" },
   ], []);
 
   const results = recipes.map((r) => ({ r, issues: validateRecipe(r, rules, materials, recipes) }));
@@ -95,7 +95,7 @@ function ValidationPage() {
         </div>
       </div>
 
-      <EntityFormDialog open={adding} onOpenChange={setAdding} title="New validation rule" fields={fields}
+      <EntityFormDialog open={adding} onClose={() => setAdding(false)} title="New validation rule" fields={fields}
         initial={{ kind: "required_param", severity: "error", config: {} }}
         onSubmit={(v) => { addRule({ name: v.name, kind: v.kind, severity: v.severity, enabled: true, config: v.config ?? {} }); setAdding(false); }} />
     </div>
