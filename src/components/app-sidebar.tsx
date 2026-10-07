@@ -1,4 +1,4 @@
-import { Sparkles, Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Sparkles,
   LayoutDashboard, FlaskConical, Boxes, GitCompareArrows, GitBranch,
   ClipboardList, Beaker, Workflow, KeyRound, History, Database, Ruler,
