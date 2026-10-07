@@ -203,7 +203,7 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
   const can = useCallback((p: data.Permission) => roles.some((r) => data.can(r, p)), [roles]);
 
   // ---- generic record helpers ----
-  const upsert = useCallback(async (kind: Kind, obj: { id: string }) => {
+  const upsert = useCallback(async (kind: Kind, obj: { id: string; [k: string]: unknown }) => {
     const { error } = await supabase.from("rms_records").upsert({ kind, id: obj.id, data: obj as never, created_by: userId });
     if (error) toast.error(errMsg(error));
     await Promise.all([loadRecords(), loadAudit()]);
