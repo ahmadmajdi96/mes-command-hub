@@ -11,7 +11,7 @@ export const Route = createFileRoute("/users")({
   component: Users,
 });
 
-const ROLES = ["System Admin", "R&D Lead Scientist", "Regulatory / QA", "Procurement / Operations"] as const;
+const ROLES = ["Recipe Engineer", "QA / Quality Manager", "Production Manager", "Operator", "RMS Administrator"] as const;
 
 function Users() {
   const { users, addUser, updateUser, deleteUser } = useRms();
@@ -90,7 +90,7 @@ function Users() {
         onClose={() => { setCreating(false); setEditing(null); }}
         title={editing ? `Edit ${editing.name}` : "Invite user"}
         fields={fields}
-        initial={editing ?? { status: "invited", role: "R&D Lead Scientist" }}
+        initial={editing ?? { status: "invited", role: "Recipe Engineer" }}
         onSubmit={submit}
         submitLabel={editing ? "Save" : "Send invite"}
       />

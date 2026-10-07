@@ -66,16 +66,16 @@ function Kpi({ label, value, delta, icon: Icon, accent = "primary", suffix }: {
 
 function Dashboard() {
   const { recipes, materials, trials, audit, apiKeys } = useRms();
-  const activeGates = recipes.filter((r) => ["review", "regulatory", "costing"].includes(r.status));
+  const activeGates = recipes.filter((r) => ["review", "approved"].includes(r.status));
   const passRate = Math.round((trials.filter((t) => t.outcome === "pass").length / trials.length) * 100);
 
   const gateDist = [
     { name: "Draft", value: recipes.filter((r) => r.status === "draft").length, color: "oklch(0.72 0.14 230)" },
-    { name: "Review", value: recipes.filter((r) => r.status === "review").length, color: "oklch(0.82 0.17 80)" },
-    { name: "Regulatory", value: recipes.filter((r) => r.status === "regulatory").length, color: "oklch(0.78 0.18 75)" },
-    { name: "Costing", value: recipes.filter((r) => r.status === "costing").length, color: "oklch(0.78 0.16 195)" },
+    { name: "Under Review", value: recipes.filter((r) => r.status === "review").length, color: "oklch(0.82 0.17 80)" },
+    { name: "Approved", value: recipes.filter((r) => r.status === "approved").length, color: "oklch(0.78 0.18 75)" },
+    { name: "Rejected", value: recipes.filter((r) => r.status === "rejected").length, color: "oklch(0.78 0.16 195)" },
     { name: "Released", value: recipes.filter((r) => r.status === "released").length, color: "oklch(0.72 0.18 155)" },
-    { name: "Abandoned", value: recipes.filter((r) => ["failed", "abandoned"].includes(r.status)).length, color: "oklch(0.65 0.24 22)" },
+    { name: "Superseded / Obsolete", value: recipes.filter((r) => ["superseded", "obsolete"].includes(r.status)).length, color: "oklch(0.65 0.24 22)" },
   ];
 
   return (

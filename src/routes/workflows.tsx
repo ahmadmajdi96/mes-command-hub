@@ -9,12 +9,14 @@ export const Route = createFileRoute("/workflows")({
   component: Workflows,
 });
 
-const GATE_ORDER = ["draft", "review", "regulatory", "costing", "released"] as const;
+const GATE_ORDER = ["draft", "review", "rejected", "approved", "released", "superseded", "obsolete"] as const;
 const GATE_TONE: Record<string, { bg: string; text: string; ring: string }> = {
   draft: { bg: "bg-info/10", text: "text-info", ring: "ring-info/30" },
   review: { bg: "bg-warning/10", text: "text-warning", ring: "ring-warning/30" },
-  regulatory: { bg: "bg-accent/10", text: "text-accent", ring: "ring-accent/30" },
-  costing: { bg: "bg-accent/10", text: "text-accent", ring: "ring-accent/30" },
+  rejected: { bg: "bg-destructive/10", text: "text-destructive", ring: "ring-destructive/30" },
+  approved: { bg: "bg-accent/10", text: "text-accent", ring: "ring-accent/30" },
+  superseded: { bg: "bg-muted/40", text: "text-muted-foreground", ring: "ring-border" },
+  obsolete: { bg: "bg-muted/40", text: "text-muted-foreground", ring: "ring-border" },
   released: { bg: "bg-success/10", text: "text-success", ring: "ring-success/30" },
 };
 
@@ -91,7 +93,7 @@ function Workflows() {
           <Workflow className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">Recipes by gate</h3>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
           {GATE_ORDER.map((g) => {
             const rs = recipes.filter((r) => r.status === g);
             const tone = GATE_TONE[g] ?? GATE_TONE.draft;
@@ -138,12 +140,12 @@ function Workflows() {
             <p className="mt-1 text-muted-foreground">UI fields disabled, save hidden, API writes rejected 403.</p>
           </div>
           <div className="rounded-lg border border-accent/40 bg-accent/5 p-3 text-xs">
-            <div className="flex items-center gap-2 font-medium text-accent"><ArrowRight className="h-4 w-4" /> Regulatory · Costing</div>
-            <p className="mt-1 text-muted-foreground">Only Regulatory/QA or Procurement roles can approve their respective gate.</p>
+            <div className="flex items-center gap-2 font-medium text-accent"><ArrowRight className="h-4 w-4" /> Review · Approval</div>
+            <p className="mt-1 text-muted-foreground">QA / Quality Manager reviews, approves, rejects or returns with mandatory reason. Production Manager releases. Authors cannot approve/release their own work.</p>
           </div>
           <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
             <div className="flex items-center gap-2 font-medium text-primary"><CheckCircle2 className="h-4 w-4" /> Released</div>
-            <p className="mt-1 text-muted-foreground">Immutable snapshot; any change forks a new draft version.</p>
+            <p className="mt-1 text-muted-foreground">Immutable; available to MES & operators. Changes require a new version; releasing it supersedes the previous one.</p>
           </div>
         </div>
       </div>

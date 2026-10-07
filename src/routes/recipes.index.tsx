@@ -11,7 +11,7 @@ export const Route = createFileRoute("/recipes/")({
   component: RecipesPage,
 });
 
-const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "regulatory", "costing", "released", "abandoned"];
+const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "rejected", "approved", "released", "superseded", "obsolete"];
 
 function RecipesPage() {
   const { recipes, materials, addRecipe, deleteRecipe } = useRms();
@@ -19,6 +19,8 @@ function RecipesPage() {
   const [status, setStatus] = useState<RecipeStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [creating, setCreating] = useState(false);
+  const { can, actor } = useRms();
+  const canDrafts = can("recipe.viewDraft");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fields = useMemo<FieldSpec[]>(() => [
@@ -30,23 +32,20 @@ function RecipesPage() {
     { key: "branchLabel", label: "Branch label", type: "text", placeholder: "Baseline / Variant A" },
     { key: "targetYieldValue", label: "Target yield", type: "number", required: true, step: 0.01 },
     { key: "targetYieldUnit", label: "Yield unit", type: "text", required: true, placeholder: "kg / L" },
-    { key: "status", label: "Initial status", type: "select", required: true, options: [
-      { value: "draft", label: "Draft" }, { value: "review", label: "Peer Review" },
-    ] },
-    { key: "createdBy", label: "Created by", type: "text", required: true },
   ], []);
 
   const filtered = useMemo(() => recipes.filter((r) =>
+    (canDrafts || r.status === "released") &&
     (status === "all" || r.status === status) &&
     (q === "" || (r.name + r.code + r.project + (r.branchLabel ?? "")).toLowerCase().includes(q.toLowerCase()))
-  ), [recipes, status, q]);
+  ), [recipes, status, q, canDrafts]);
 
   const groups = groupedProjects(filtered);
 
   const stats = {
     total: recipes.length,
     released: recipes.filter((r) => r.status === "released").length,
-    inFlight: recipes.filter((r) => ["review", "regulatory", "costing"].includes(r.status)).length,
+    inFlight: recipes.filter((r) => ["review", "approved"].includes(r.status)).length,
     avgCost: recipes.length ? recipes.reduce((a, r) => a + recipeCost(r, materials), 0) / recipes.length : 0,
   };
 
@@ -64,9 +63,9 @@ function RecipesPage() {
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Recipes</h1>
             <p className="mt-1 text-sm text-muted-foreground">Multi-level formulas with proportional or fixed scaling across every active R&amp;D project.</p>
           </div>
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+          {can("recipe.create") && <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
             <Plus className="h-3.5 w-3.5" /> New draft
-          </button>
+          </button>}
         </div>
 
         <div className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -215,13 +214,13 @@ function RecipesPage() {
         title="New recipe draft"
         subtitle="Add components and process steps after creating the recipe."
         fields={fields}
-        initial={{ status: "draft", targetYieldValue: 1000, targetYieldUnit: "kg", createdBy: "M. Fahad" }}
+        initial={{ targetYieldValue: 1000, targetYieldUnit: "kg" }}
         onSubmit={(v: any) => {
           const id = `REC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
           addRecipe({
             id, code: v.code, name: v.name, version: v.version, project: v.project,
             classification: v.classification, branchLabel: v.branchLabel || undefined,
-            status: v.status, createdBy: v.createdBy,
+            status: "draft", createdBy: actor,
             targetYield: { value: Number(v.targetYieldValue), unit: v.targetYieldUnit },
             compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 180 },
           } as any);

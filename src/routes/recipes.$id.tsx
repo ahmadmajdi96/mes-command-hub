@@ -4,6 +4,8 @@ import { Lock, Save, ChevronRight, GitBranch, Beaker, GitCompareArrows, ShieldCh
 import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
 import { recipeCost, statusLabel, type RecipeStatus, type RecipeItem, type ProcessStep, type Recipe } from "@/lib/rms-data";
+import { RecipeWorkflowPanel } from "@/components/recipe-workflow-panel";
+import { LIFECYCLE } from "@/lib/rms-data";
 import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -11,13 +13,13 @@ export const Route = createFileRoute("/recipes/$id")({
   component: RecipeDetail,
 });
 
-const GATE_ORDER: RecipeStatus[] = ["draft", "review", "regulatory", "costing", "released"];
+const GATE_ORDER: RecipeStatus[] = LIFECYCLE;
 
 function RecipeDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const {
-    recipes, materials, updateRecipeItem, moveGate, role,
+    recipes, materials, updateRecipeItem, role, can,
     addRecipeItem, removeRecipeItem, updateRecipe, deleteRecipe,
     addProcessStep, updateProcessStep, removeProcessStep,
   } = useRms();
@@ -40,7 +42,7 @@ function RecipeDetail() {
   const [editingMeta, setEditingMeta] = useState(false);
   const [deleteRecipeOpen, setDeleteRecipeOpen] = useState(false);
 
-  const locked = ["review", "regulatory", "costing", "released"].includes(recipe.status);
+  const locked = recipe.status !== "draft" || !can("recipe.edit");
 
   const totalPct = useMemo(() => recipe.items.reduce((a, it) => a + it.targetPct, 0), [recipe.items]);
   const cost = recipeCost(recipe, materials);
@@ -50,7 +52,6 @@ function RecipeDetail() {
   const children = recipes.filter((r) => r.parentId === recipe.id);
 
   const currentGateIdx = GATE_ORDER.indexOf(recipe.status);
-  const nextGate = currentGateIdx >= 0 && currentGateIdx < GATE_ORDER.length - 1 ? GATE_ORDER[currentGateIdx + 1] : null;
 
   const itemFields = useMemo<FieldSpec[]>(() => [
     { key: "refType", label: "Reference type", type: "select", required: true, options: [
@@ -122,16 +123,10 @@ function RecipeDetail() {
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               <StatusPill status={recipe.status} />
-              <button onClick={() => setEditingMeta(true)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /> Edit</button>
-              <button onClick={() => setDeleteRecipeOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive hover:bg-destructive/20"><Trash2 className="h-3 w-3" /> Delete</button>
+              {!locked && <button onClick={() => setEditingMeta(true)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /> Edit</button>}
+              {recipe.status === "draft" && can("recipe.edit") && <button onClick={() => setDeleteRecipeOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive hover:bg-destructive/20"><Trash2 className="h-3 w-3" /> Delete</button>}
             </div>
             {locked && <span className="inline-flex items-center gap-1 rounded-md bg-warning/10 px-2 py-1 text-[11px] text-warning"><Lock className="h-3 w-3" /> Fields locked</span>}
-            {nextGate && !locked && (
-              <button onClick={() => moveGate(recipe.id, nextGate)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">
-                Advance → {statusLabel(nextGate)} <ArrowUpRight className="h-3 w-3" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -171,6 +166,8 @@ function RecipeDetail() {
           ))}
         </div>
       </div>
+
+      <RecipeWorkflowPanel recipe={recipe} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,340px)]">
         <aside className="glass-panel h-fit rounded-2xl p-4">

@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, FlaskConical, Boxes, GitCompareArrows, GitBranch,
   ClipboardList, Beaker, Workflow, KeyRound, History, Database, Ruler,
-  ShieldCheck, Users, Settings, Archive,
+  ShieldCheck, Users, Settings, Archive, Factory, Route as RouteIcon, Plug, ArrowLeftRight, ListChecks,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -18,13 +18,21 @@ const overview = [
 
 const lab = [
   { title: "Trial Logs", url: "/trials", icon: Beaker },
-  { title: "Stage-Gate Pipelines", url: "/workflows", icon: Workflow },
+  { title: "Approval Workflow", url: "/workflows", icon: Workflow },
+];
+
+const production = [
+  { title: "Production Execution", url: "/execution", icon: Factory },
+  { title: "Traceability", url: "/traceability", icon: RouteIcon },
+  { title: "Integrations (MES · QMS)", url: "/integrations", icon: Plug },
+  { title: "Import & Export", url: "/data-exchange", icon: ArrowLeftRight },
 ];
 
 const master = [
   { title: "Material Catalog", url: "/materials", icon: Boxes },
   { title: "Attribute Schemas", url: "/schemas", icon: Database },
   { title: "Units & Conversions", url: "/units", icon: Ruler },
+  { title: "Validation Rules", url: "/validation", icon: ListChecks },
 ];
 
 const security = [
@@ -85,6 +93,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         {renderGroup("Formulation", overview)}
         {renderGroup("Laboratory", lab)}
+        {renderGroup("Production", production)}
         {renderGroup("Master Data", master)}
         {renderGroup("Governance", security)}
       </SidebarContent>
