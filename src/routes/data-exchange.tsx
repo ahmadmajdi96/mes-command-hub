@@ -56,7 +56,7 @@ function DataExchange() {
         const arr = JSON.parse(text);
         const rs = (Array.isArray(arr) ? arr : [arr]) as Recipe[];
         if (!rs.every((r) => r.code && r.name && Array.isArray(r.items))) throw new Error("Missing code/name/items");
-        toast.success(`Imported ${importRecipes(rs)} recipes as drafts`);
+        { const n = await importRecipes(rs); if (n) toast.success(`Imported ${n} recipes as drafts`); }
       } else if (f.name.endsWith(".csv") || f.name.endsWith(".xls") || f.name.endsWith(".tsv")) {
         const sep = text.includes("\t") ? "\t" : ",";
         const lines = text.trim().split(/\r?\n/).slice(1).map((l) => l.split(sep).map((c) => c.replace(/^"|"$/g, "")));
@@ -66,7 +66,7 @@ function DataExchange() {
           r.items.push({ id: `imp${idx}`, refType: "material", refId: ref, name: iname, targetPct: +t, minPct: +mn, maxPct: +mx, unit, scaling: "proportional" });
           map.set(code, r);
         });
-        toast.success(`Imported ${importRecipes([...map.values()])} recipes as drafts`);
+        { const n = await importRecipes([...map.values()]); if (n) toast.success(`Imported ${n} recipes as drafts`); }
       } else if (f.name.endsWith(".xml")) {
         const doc = new DOMParser().parseFromString(text, "application/xml");
         const rs = [...doc.querySelectorAll("recipe")].map((n, k) => ({
@@ -74,7 +74,7 @@ function DataExchange() {
           targetYield: { value: 100, unit: "kg" }, process: [], compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 0 }, createdBy: "", approvedBy: [], updatedAt: "",
           items: [...n.querySelectorAll("item")].map((i, j) => ({ id: `x${j}`, refType: "material" as const, refId: i.getAttribute("ref") ?? "", name: i.getAttribute("ref") ?? "", targetPct: +(i.getAttribute("pct") ?? 0), minPct: +(i.getAttribute("pct") ?? 0), maxPct: +(i.getAttribute("pct") ?? 0), unit: i.getAttribute("unit") ?? "kg", scaling: "proportional" as const })),
         })) as Recipe[];
-        toast.success(`Imported ${importRecipes(rs)} recipes as drafts`);
+        { const n = await importRecipes(rs); if (n) toast.success(`Imported ${n} recipes as drafts`); }
       } else toast.error("Unsupported file type");
     } catch (err) {
       toast.error(`Import failed: ${(err as Error).message}`);

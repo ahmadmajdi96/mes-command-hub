@@ -92,11 +92,11 @@ function ExecutionPage() {
 
       <EntityFormDialog open={!!startFor} onClose={() => setStartFor(null)} title="Start production execution" fields={startFields}
         initial={{ line: "Line 1", equipment: "Mixer MX-02", source: "MES" }} submitLabel="Start"
-        onSubmit={(v: any) => {
+        onSubmit={async (v: any) => {
           const r = recipes.find((x) => x.id === startFor);
           if (!r || r.status !== "released") { toast.error("Only released recipes can be executed"); return; }
-          addExecution({ recipeId: r.id, recipeCode: r.code, version: r.version, productionOrder: v.productionOrder, batch: v.batch, equipment: v.equipment, line: v.line, source: v.source, operator: actor, startedAt: new Date().toISOString().slice(0, 16).replace("T", " "), finishedAt: null, status: "running", qcStatus: "pending" });
-          toast.success(`Execution started${v.source === "MES" ? " · sent to MES Command Center" : ""}`);
+          const ok = await addExecution({ recipeId: r.id, recipeCode: r.code, version: r.version, productionOrder: v.productionOrder, batch: v.batch, equipment: v.equipment, line: v.line, source: v.source, operator: actor, startedAt: new Date().toISOString().slice(0, 16).replace("T", " "), finishedAt: null, status: "running", qcStatus: "pending" });
+          if (ok) toast.success(`Execution started${v.source === "MES" ? " · sent to MES Command Center" : ""}`);
           setStartFor(null);
         }} />
       <EntityFormDialog open={!!finish} onClose={() => setFinish(null)} title="Complete execution" fields={finishFields} submitLabel="Complete"

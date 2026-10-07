@@ -398,7 +398,7 @@ function RecipeDetail() {
             <button disabled={locked} className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 disabled:opacity-40">
               <Save className="h-4 w-4" /> Save draft
             </button>
-            <p className="text-center text-[10px] text-muted-foreground">Acting as <span className="text-primary">{role}</span></p>
+            <p className="text-center text-[10px] text-muted-foreground">Signed in as <span className="text-primary">{role}</span></p>
           </div>
         </aside>
       </div>
