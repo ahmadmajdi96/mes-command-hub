@@ -13,7 +13,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { RmsStoreProvider, useRms } from "@/lib/rms-store";
 import { Toaster } from "@/components/ui/sonner";
-import type { Role } from "@/lib/rms-data";
+import { ROLES, type Role } from "@/lib/rms-data";
 
 function NotFoundComponent() {
   return (
@@ -89,14 +89,15 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 const roleInitials: Record<Role, string> = {
-  "System Admin": "SA",
-  "R&D Lead Scientist": "RS",
-  "Regulatory / QA": "RQ",
-  "Procurement / Operations": "PO",
+  "Recipe Engineer": "RE",
+  "QA / Quality Manager": "QA",
+  "Production Manager": "PM",
+  "Operator": "OP",
+  "RMS Administrator": "AD",
 };
 
 function TopBar() {
-  const { role, setRole } = useRms();
+  const { role, setRole, actor } = useRms();
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
@@ -115,10 +116,7 @@ function TopBar() {
           className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs text-foreground focus:border-primary/50 focus:outline-none"
           aria-label="Simulated role"
         >
-          <option>System Admin</option>
-          <option>R&amp;D Lead Scientist</option>
-          <option>Regulatory / QA</option>
-          <option>Procurement / Operations</option>
+          {ROLES.map((r) => <option key={r}>{r}</option>)}
         </select>
         <button className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground transition hover:text-foreground">
           <Bell className="h-4 w-4" />
@@ -129,7 +127,7 @@ function TopBar() {
             {roleInitials[role]}
           </div>
           <div className="hidden text-xs leading-tight sm:block">
-            <div className="font-medium">Signed in</div>
+            <div className="font-medium">{actor}</div>
             <div className="text-[10px] text-muted-foreground">{role}</div>
           </div>
         </div>

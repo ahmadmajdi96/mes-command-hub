@@ -19,7 +19,7 @@ function ApiKeys() {
 
   const fields = useMemo<FieldSpec[]>(() => [
     { key: "label", label: "Label", type: "text", required: true, placeholder: "e.g. Batch reactor 4 daily sync", col: 2 },
-    { key: "createdBy", label: "Owner", type: "text", required: true, placeholder: "System Admin" },
+    { key: "createdBy", label: "Owner", type: "text", required: true, placeholder: "R. Admin" },
     { key: "expiresAt", label: "Expires (YYYY-MM-DD)", type: "text", placeholder: "leave blank for ∞" },
     { key: "scopes", label: "Scopes", type: "multiselect", options: ALL_SCOPES.map((s) => ({ value: s, label: s })), help: "Least-privilege principle — grant only what the caller needs" },
   ], []);
@@ -107,7 +107,7 @@ function ApiKeys() {
         title="Provision new API token"
         subtitle="Scoped tokens can be revoked at any time."
         fields={fields}
-        initial={{ createdBy: "System Admin", scopes: ["recipes:read"], expiresAt: "" }}
+        initial={{ createdBy: "R. Admin", scopes: ["recipes:read"], expiresAt: "" }}
         onSubmit={submit}
         submitLabel="Generate token"
       />

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/recipes/")({
   component: RecipesPage,
 });
 
-const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "regulatory", "costing", "released", "abandoned"];
+const STATUS_FILTERS: ("all" | RecipeStatus)[] = ["all", "draft", "review", "rejected", "approved", "released", "superseded", "obsolete"];
 
 function RecipesPage() {
   const { recipes, materials, addRecipe, deleteRecipe } = useRms();
@@ -46,7 +46,7 @@ function RecipesPage() {
   const stats = {
     total: recipes.length,
     released: recipes.filter((r) => r.status === "released").length,
-    inFlight: recipes.filter((r) => ["review", "regulatory", "costing"].includes(r.status)).length,
+    inFlight: recipes.filter((r) => ["review", "approved"].includes(r.status)).length,
     avgCost: recipes.length ? recipes.reduce((a, r) => a + recipeCost(r, materials), 0) / recipes.length : 0,
   };
 
