@@ -13,6 +13,22 @@ type Store = {
   units: data.UnitDef[];
   users: data.UserAccount[];
   audit: data.AuditEntry[];
+  actor: string;
+  can: (p: data.Permission) => boolean;
+  rules: data.ValidationRule[];
+  executions: data.ExecutionRecord[];
+  integrations: data.IntegrationEndpoint[];
+  logAudit: (e: Omit<data.AuditEntry, "id" | "ts" | "user">) => void;
+  transition: (recipeId: string, action: WorkflowAction, reason: string) => { ok: boolean; error?: string };
+  newVersion: (recipeId: string, reason: string) => string | null;
+  copyRecipe: (recipeId: string) => string | null;
+  addRule: (r: Omit<data.ValidationRule, "id">) => void;
+  updateRule: (id: string, patch: Partial<data.ValidationRule>) => void;
+  deleteRule: (id: string) => void;
+  addExecution: (e: Omit<data.ExecutionRecord, "id">) => void;
+  updateExecution: (id: string, patch: Partial<data.ExecutionRecord>) => void;
+  updateIntegration: (id: string, patch: Partial<data.IntegrationEndpoint>) => void;
+  importRecipes: (rs: data.Recipe[]) => number;
 
   // Materials
   addMaterial: (m: Omit<data.Material, "id" | "updatedAt">) => void;
@@ -66,6 +82,16 @@ type Store = {
   moveGate: (recipeId: string, next: data.RecipeStatus) => void;
 };
 
+export type WorkflowAction = "submit" | "approve" | "reject" | "return" | "release" | "obsolete";
+export const ACTION_META: Record<WorkflowAction, { label: string; from: data.RecipeStatus[]; to: data.RecipeStatus; perm: data.Permission }> = {
+  submit: { label: "Submit for review", from: ["draft", "rejected"], to: "review", perm: "recipe.submit" },
+  approve: { label: "Approve", from: ["review"], to: "approved", perm: "recipe.approve" },
+  reject: { label: "Reject", from: ["review"], to: "rejected", perm: "recipe.reject" },
+  return: { label: "Return for correction", from: ["review", "approved"], to: "draft", perm: "recipe.return" },
+  release: { label: "Release to production", from: ["approved"], to: "released", perm: "recipe.release" },
+  obsolete: { label: "Mark obsolete", from: ["released", "approved", "superseded"], to: "obsolete", perm: "recipe.obsolete" },
+};
+
 const Ctx = createContext<Store | null>(null);
 
 const nowStamp = () => new Date().toISOString().slice(0, 10);
@@ -73,7 +99,7 @@ const nowStampFull = () => new Date().toISOString().slice(0, 16).replace("T", " 
 const rid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
 export function RmsStoreProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<data.Role>("R&D Lead Scientist");
+  const [role, setRole] = useState<data.Role>("Recipe Engineer");
   const [materials, setMaterials] = useState<data.Material[]>(data.materials);
   const [recipes, setRecipes] = useState<data.Recipe[]>(data.recipes);
   const [trials, setTrials] = useState<data.Trial[]>(data.trials);
@@ -81,11 +107,69 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
   const [schemas, setSchemas] = useState<data.AttributeSchema[]>(data.schemas);
   const [units, setUnits] = useState<data.UnitDef[]>(data.units);
   const [users, setUsers] = useState<data.UserAccount[]>(data.users);
-  const [audit] = useState<data.AuditEntry[]>(data.auditTrail);
+  const [audit, setAudit] = useState<data.AuditEntry[]>(data.auditTrail);
+  const [rules, setRules] = useState<data.ValidationRule[]>(data.validationRules);
+  const [executions, setExecutions] = useState<data.ExecutionRecord[]>(data.executions);
+  const [integrations, setIntegrations] = useState<data.IntegrationEndpoint[]>(data.integrations);
+  const actor = data.roleActor[role];
+
+  const logAudit = (e: Omit<data.AuditEntry, "id" | "ts" | "user">) =>
+    setAudit((prev) => [{ ...e, id: rid("a"), ts: new Date().toISOString().slice(0, 19).replace("T", " "), user: actor }, ...prev]);
 
   const value = useMemo<Store>(() => ({
     role, setRole,
     materials, recipes, trials, apiKeys, schemas, units, users, audit,
+    actor, can: (p) => data.can(role, p), rules, executions, integrations, logAudit,
+    transition: (recipeId, action, reason) => {
+      const r = recipes.find((x) => x.id === recipeId);
+      const meta = ACTION_META[action];
+      if (!r) return { ok: false, error: "Recipe not found" };
+      if (!data.can(role, meta.perm)) return { ok: false, error: `Role "${role}" is not permitted to ${action}` };
+      if (!meta.from.includes(r.status)) return { ok: false, error: `Cannot ${action} from ${data.statusLabel(r.status)}` };
+      if ((action === "approve" || action === "release") && r.createdBy === actor) return { ok: false, error: "Segregation of duties: authors cannot approve or release their own recipe" };
+      if (["reject", "return", "obsolete"].includes(action) && !reason.trim()) return { ok: false, error: "A reason is required" };
+      if (action === "submit" || action === "approve" || action === "release") {
+        const errs = data.validateRecipe(r, rules, materials, recipes).filter((i) => i.severity === "error");
+        if (errs.length) return { ok: false, error: `Validation failed: ${errs[0].message}${errs.length > 1 ? ` (+${errs.length - 1} more)` : ""}` };
+      }
+      setRecipes((prev) => prev.map((x) => {
+        if (x.id === recipeId) return { ...x, status: meta.to, updatedAt: nowStamp(), approvedBy: action === "approve" ? [...x.approvedBy, actor] : x.approvedBy };
+        // releasing a version supersedes the previously released version of the same code family
+        if (action === "release" && x.status === "released" && x.code === r.code) return { ...x, status: "superseded" };
+        return x;
+      }));
+      logAudit({ action: action.toUpperCase(), entity: recipeId, property: "status", before: r.status, after: meta.to, reason: reason || undefined, version: r.version });
+      return { ok: true };
+    },
+    newVersion: (recipeId, reason) => {
+      const r = recipes.find((x) => x.id === recipeId);
+      if (!r || !data.can(role, "recipe.version")) return null;
+      const id = rid("REC");
+      const m = r.version.match(/^v(\d+)\.(\d+)/);
+      const version = m ? `v${m[1]}.${Number(m[2]) + 1}` : `${r.version}.1`;
+      setRecipes((prev) => [{ ...structuredClone(r), id, version, status: "draft", approvedBy: [], createdBy: actor, updatedAt: nowStamp() }, ...prev]);
+      logAudit({ action: "NEW_VERSION", entity: id, property: "version", before: r.version, after: version, reason, version });
+      return id;
+    },
+    copyRecipe: (recipeId) => {
+      const r = recipes.find((x) => x.id === recipeId);
+      if (!r || !data.can(role, "recipe.copy")) return null;
+      const id = rid("REC");
+      setRecipes((prev) => [{ ...structuredClone(r), id, code: `${r.code}-COPY`, name: `${r.name} (copy)`, version: "v1.0", parentId: undefined, status: "draft", approvedBy: [], createdBy: actor, updatedAt: nowStamp() }, ...prev]);
+      logAudit({ action: "COPY", entity: id, property: "source", before: "—", after: recipeId });
+      return id;
+    },
+    addRule: (r) => { setRules((p) => [...p, { ...r, id: rid("VR") }]); logAudit({ action: "CREATE", entity: "validation_rule", property: "name", before: "—", after: r.name }); },
+    updateRule: (id, patch) => setRules((p) => p.map((r) => r.id === id ? { ...r, ...patch } : r)),
+    deleteRule: (id) => setRules((p) => p.filter((r) => r.id !== id)),
+    addExecution: (e) => { const id = rid("EX"); setExecutions((p) => [{ ...e, id }, ...p]); logAudit({ action: "EXECUTE", entity: e.recipeId, property: "batch", before: "—", after: `${e.batch} / ${e.productionOrder}`, version: e.version }); },
+    updateExecution: (id, patch) => setExecutions((p) => p.map((x) => x.id === id ? { ...x, ...patch } : x)),
+    updateIntegration: (id, patch) => setIntegrations((p) => p.map((x) => x.id === id ? { ...x, ...patch } : x)),
+    importRecipes: (rs) => {
+      setRecipes((prev) => [...rs.map((r) => ({ ...r, id: rid("REC"), status: "draft" as const, approvedBy: [], createdBy: actor, updatedAt: nowStamp() })), ...prev]);
+      logAudit({ action: "IMPORT", entity: "recipes", property: "count", before: "0", after: String(rs.length) });
+      return rs.length;
+    },
 
     addMaterial: (m) => setMaterials((prev) => [{ ...m, id: rid("MAT"), updatedAt: nowStamp() }, ...prev]),
     updateMaterial: (id, patch) => setMaterials((prev) => prev.map((x) => x.id === id ? { ...x, ...patch, updatedAt: nowStamp() } : x)),
@@ -154,7 +238,7 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
     deleteUser: (id) => setUsers((prev) => prev.filter((u) => u.id !== id)),
 
     moveGate: (recipeId, next) => setRecipes((prev) => prev.map((r) => r.id === recipeId ? { ...r, status: next, updatedAt: nowStamp() } : r)),
-  }), [role, materials, recipes, trials, apiKeys, schemas, units, users, audit]);
+  }), [role, actor, materials, recipes, trials, apiKeys, schemas, units, users, audit, rules, executions, integrations]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

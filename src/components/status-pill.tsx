@@ -3,11 +3,21 @@ import { cn } from "@/lib/utils";
 const styles: Record<string, string> = {
   draft: "text-info",
   review: "text-warning",
-  regulatory: "text-accent",
-  costing: "text-accent",
+  rejected: "text-destructive",
+  approved: "text-accent",
   released: "text-success",
+  superseded: "text-muted-foreground",
+  obsolete: "text-muted-foreground",
+  completed: "text-success",
+  running: "text-info",
+  dispatched: "text-warning",
+  aborted: "text-destructive",
+  passed: "text-success",
   failed: "text-destructive",
-  abandoned: "text-muted-foreground",
+  pending: "text-warning",
+  connected: "text-success",
+  degraded: "text-warning",
+  disconnected: "text-destructive",
   active: "text-success",
   invited: "text-info",
   disabled: "text-muted-foreground",
@@ -28,7 +38,7 @@ export function StatusPill({ status, className }: { status: string; className?: 
       )}
     >
       <span className={cn("status-dot", c, (status === "active" || status === "released") && "animate-pulse-glow")} />
-      {status}
+      {({ review: "under review" } as Record<string, string>)[status] ?? status}
     </span>
   );
 }
