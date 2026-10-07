@@ -92,7 +92,7 @@ function ExecutionPage() {
 
       <EntityFormDialog open={!!startFor} onClose={() => setStartFor(null)} title="Start production execution" fields={startFields}
         initial={{ line: "Line 1", equipment: "Mixer MX-02", source: "MES" }} submitLabel="Start"
-        onSubmit={(v) => {
+        onSubmit={(v: any) => {
           const r = recipes.find((x) => x.id === startFor);
           if (!r || r.status !== "released") { toast.error("Only released recipes can be executed"); return; }
           addExecution({ recipeId: r.id, recipeCode: r.code, version: r.version, productionOrder: v.productionOrder, batch: v.batch, equipment: v.equipment, line: v.line, source: v.source, operator: actor, startedAt: new Date().toISOString().slice(0, 16).replace("T", " "), finishedAt: null, status: "running", qcStatus: "pending" });
