@@ -8,4 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Permissions and recipe lifecycle live in src/lib/rms-data.ts (can/ACTION_META); UI must gate actions through useRms().can — single source for RBAC checks.
+- Permissions: UI gates via useRms().can (role table in src/lib/rms-data.ts); the database enforces the same rules (RLS, can_write_record, transition_recipe) — server is the source of truth.
+- Recipes live in table `recipes`; other entities in `rms_records` (kind + jsonb). Audit is written only by DB triggers/security-definer functions.
+- Whole app is gated by the in-root Gate (session + at least one role); first account to sign up becomes RMS Administrator via ensure_profile().
