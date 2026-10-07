@@ -6,7 +6,7 @@ import { StatusPill } from "@/components/status-pill";
 import type { Recipe } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/branches")({
-  head: () => ({ meta: [{ title: "Variant Branches · Cortanex RMS" }, { name: "description", content: "Tree branches for parallel recipe variants across projects." }] }),
+  head: () => ({ meta: [{ title: "Variant Branches · Cortanex RMS" }, { name: "description", content: "Tree branches for parallel recipe variants across projects." }, { property: "og:title", content: "Variant Branches · Cortanex RMS" }, { property: "og:description", content: "Tree branches for parallel recipe variants across projects." }] }),
   component: Branches,
 });
 

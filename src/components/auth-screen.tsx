@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FlaskConical, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 
 export function AuthScreen() {
   const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
@@ -34,11 +33,6 @@ export function AuthScreen() {
     } finally { setBusy(false); }
   };
 
-  const google = async () => {
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (res && "error" in res && res.error) toast.error(String((res.error as Error).message ?? res.error));
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="glass-panel w-full max-w-sm rounded-2xl p-6">
@@ -63,13 +57,10 @@ export function AuthScreen() {
             {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
           </button>
         </form>
-        {mode !== "reset" && (
-          <button onClick={google} className="mt-3 h-10 w-full rounded-lg border border-border/60 bg-card/60 text-sm hover:border-primary/40">Continue with Google</button>
-        )}
         <div className="mt-4 flex justify-between text-xs text-muted-foreground">
           {mode === "signin" ? (
             <>
-              <button onClick={() => setMode("signup")} className="hover:text-primary">Create account</button>
+              <button onClick={() => setMode("signup")} className="hover:text-primary">Request an account</button>
               <button onClick={() => setMode("reset")} className="hover:text-primary">Forgot password?</button>
             </>
           ) : <button onClick={() => setMode("signin")} className="hover:text-primary">Back to sign in</button>}

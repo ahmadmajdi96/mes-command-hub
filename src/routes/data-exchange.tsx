@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Download, Upload, FileJson, FileSpreadsheet, FileCode, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useRms } from "@/lib/rms-store";
-import type { Recipe } from "@/lib/rms-data";
+import { validateRecipe, type Recipe } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/data-exchange")({
   head: () => ({ meta: [
@@ -30,6 +30,27 @@ function DataExchange() {
   const { recipes, can, importRecipes, logAudit } = useRms();
   const [scope, setScope] = useState<"all" | "released">("released");
   const fileRef = useRef<HTMLInputElement>(null);
+  const { materials, rules } = useRms();
+  const [preview, setPreview] = useState<Recipe[] | null>(null);
+  const checks = (preview ?? []).map((r) => {
+    const issues = validateRecipe({ ...r, process: r.process ?? [], compliance: r.compliance ?? { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 0 } } as Recipe, rules, materials, recipes);
+    return { r, errors: issues.filter((i) => i.severity === "error").map((i) => i.message) };
+  });
+  const confirmImport = async () => {
+    if (!preview) return;
+    const n = await importRecipes(preview);
+    if (n) toast.success(`Imported ${n} recipes as drafts`);
+    setPreview(null);
+  };
+  const template = (fmt: "csv" | "json" | "xml") => {
+    const sample = { code: "NEW-RECIPE", name: "Example recipe", version: "v1.0", items: [{ refId: "MAT-0210", name: "Deionized Water", targetPct: 100, minPct: 99, maxPct: 100, unit: "L" }] };
+    const body = fmt === "csv" ? "recipe_id,code,name,version,status,item_ref,item_name,target_pct,min_pct,max_pct,unit\n,NEW-RECIPE,\"Example recipe\",v1.0,draft,MAT-0210,\"Deionized Water\",100,99,100,L"
+      : fmt === "json" ? JSON.stringify([{ ...sample, project: "Imported", classification: "", targetYield: { value: 100, unit: "kg" }, process: [], items: sample.items.map((i, k) => ({ ...i, id: `i${k}`, refType: "material", scaling: "proportional" })) }], null, 2)
+      : `<?xml version="1.0"?>\n<recipes>\n  <recipe code="NEW-RECIPE" version="v1.0">\n    <item ref="MAT-0210" pct="100" unit="L"/>\n  </recipe>\n</recipes>`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([body], { type: "text/plain" }));
+    a.download = `rms_import_template.${fmt}`; a.click();
+  };
   const canExport = can("data.export");
   const canImport = can("data.import");
   const list = scope === "all" && can("recipe.viewDraft") ? recipes : recipes.filter((r) => r.status === "released");
@@ -37,26 +58,37 @@ function DataExchange() {
   const exportAs = async (fmt: Fmt) => {
     let blob: Blob;
     if (fmt === "xlsx") {
-      // Excel-compatible tab-separated sheet
-      blob = new Blob([toCsv(list).replace(/,/g, "\t")], { type: "application/vnd.ms-excel" });
+      const XLSX = await import("xlsx");
+      const rows: (string | number)[][] = [["recipe_id", "code", "name", "version", "status", "item_ref", "item_name", "target_pct", "min_pct", "max_pct", "unit"],
+        ...list.flatMap((r) => r.items.map((i) => [r.id, r.code, r.name, r.version, r.status, i.refId, i.name, i.targetPct, i.minPct, i.maxPct, i.unit]))];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Recipes");
+      const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+      blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     } else if (fmt === "csv") blob = new Blob([toCsv(list)], { type: "text/csv" });
     else if (fmt === "json") blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
     else blob = new Blob([toXml(list)], { type: "application/xml" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `rms_recipes.${fmt === "xlsx" ? "xls" : fmt}`; a.click();
+    a.download = `rms_recipes.${fmt}`; a.click();
     logAudit({ action: "EXPORT", entity: "recipes", property: "format", before: scope, after: `${fmt} (${list.length})` });
     toast.success(`Exported ${list.length} recipes as ${fmt.toUpperCase()}`);
   };
 
   const onFile = async (f: File) => {
-    const text = await f.text();
+    let text = await f.text();
+    if (/\.xlsx?$/i.test(f.name)) {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await f.arrayBuffer(), { type: "array" });
+      text = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+      f = new File([text], f.name.replace(/\.xlsx?$/i, ".csv"));
+    }
     try {
       if (f.name.endsWith(".json")) {
         const arr = JSON.parse(text);
         const rs = (Array.isArray(arr) ? arr : [arr]) as Recipe[];
         if (!rs.every((r) => r.code && r.name && Array.isArray(r.items))) throw new Error("Missing code/name/items");
-        { const n = await importRecipes(rs); if (n) toast.success(`Imported ${n} recipes as drafts`); }
+        setPreview(rs);
       } else if (f.name.endsWith(".csv") || f.name.endsWith(".xls") || f.name.endsWith(".tsv")) {
         const sep = text.includes("\t") ? "\t" : ",";
         const lines = text.trim().split(/\r?\n/).slice(1).map((l) => l.split(sep).map((c) => c.replace(/^"|"$/g, "")));
@@ -66,7 +98,7 @@ function DataExchange() {
           r.items.push({ id: `imp${idx}`, refType: "material", refId: ref, name: iname, targetPct: +t, minPct: +mn, maxPct: +mx, unit, scaling: "proportional" });
           map.set(code, r);
         });
-        { const n = await importRecipes([...map.values()]); if (n) toast.success(`Imported ${n} recipes as drafts`); }
+        setPreview([...map.values()]);
       } else if (f.name.endsWith(".xml")) {
         const doc = new DOMParser().parseFromString(text, "application/xml");
         const rs = [...doc.querySelectorAll("recipe")].map((n, k) => ({
@@ -74,7 +106,7 @@ function DataExchange() {
           targetYield: { value: 100, unit: "kg" }, process: [], compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 0 }, createdBy: "", approvedBy: [], updatedAt: "",
           items: [...n.querySelectorAll("item")].map((i, j) => ({ id: `x${j}`, refType: "material" as const, refId: i.getAttribute("ref") ?? "", name: i.getAttribute("ref") ?? "", targetPct: +(i.getAttribute("pct") ?? 0), minPct: +(i.getAttribute("pct") ?? 0), maxPct: +(i.getAttribute("pct") ?? 0), unit: i.getAttribute("unit") ?? "kg", scaling: "proportional" as const })),
         })) as Recipe[];
-        { const n = await importRecipes(rs); if (n) toast.success(`Imported ${n} recipes as drafts`); }
+        setPreview(rs);
       } else toast.error("Unsupported file type");
     } catch (err) {
       toast.error(`Import failed: ${(err as Error).message}`);
@@ -114,10 +146,29 @@ function DataExchange() {
         <div className="glass-panel rounded-2xl p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold"><Upload className="h-4 w-4 text-primary" /> Import</h3>
           <button disabled={!canImport} onClick={() => fileRef.current?.click()} className="mt-3 flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border/60 p-8 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-40">
-            <Upload className="h-6 w-6" /> Choose CSV, Excel (.xls/.tsv), JSON or XML file
+            <Upload className="h-6 w-6" /> Choose CSV, Excel (.xlsx), JSON or XML file
           </button>
-          <input ref={fileRef} type="file" accept=".csv,.xls,.tsv,.json,.xml" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
+          <input ref={fileRef} type="file" accept=".csv,.xls,.xlsx,.tsv,.json,.xml" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
           {!canImport && <p className="mt-2 flex items-center gap-1 text-xs text-warning"><Lock className="h-3 w-3" /> Your role cannot import</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Templates:
+            {(["csv", "json", "xml"] as const).map((f) => <button key={f} onClick={() => template(f)} className="rounded border border-border/60 px-2 py-0.5 font-mono hover:text-primary">{f}</button>)}
+          </div>
+          {preview && (
+            <div className="mt-4 space-y-2">
+              <div className="text-xs font-semibold">Preview — {preview.length} recipe(s)</div>
+              {checks.map(({ r, errors }, i) => (
+                <div key={i} className={`rounded-lg border p-2 text-xs ${errors.length ? "border-warning/40 bg-warning/5" : "border-success/40 bg-success/5"}`}>
+                  <div className="font-medium">{r.code} {r.version} · {r.items.length} item(s)</div>
+                  {errors.length ? errors.map((e, k) => <div key={k} className="text-warning">• {e}</div>) : <div className="text-success">Ready</div>}
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground">Items with issues can still be imported as drafts and fixed before submission.</p>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setPreview(null)} className="px-3 py-1 text-xs text-muted-foreground">Cancel</button>
+                <button onClick={confirmImport} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Import as drafts</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

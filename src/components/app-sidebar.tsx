@@ -12,6 +12,7 @@ import {
 const overview = [
   { title: "R&D Control Center", url: "/", icon: LayoutDashboard },
   { title: "Recipes", url: "/recipes", icon: FlaskConical },
+  { title: "Review Queue", url: "/review-queue", icon: ClipboardList },
   { title: "Variant Branches", url: "/branches", icon: GitBranch },
   { title: "Comparison Engine", url: "/compare", icon: GitCompareArrows },
 ];

@@ -6,7 +6,7 @@ import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/en
 import type { AttributeSchema } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/schemas")({
-  head: () => ({ meta: [{ title: "Attribute Schemas · Cortanex RMS" }, { name: "description", content: "Custom attribute schema builder for industry-agnostic material profiling." }] }),
+  head: () => ({ meta: [{ title: "Attribute Schemas · Cortanex RMS" }, { name: "description", content: "Custom attribute schema builder for industry-agnostic material profiling." }, { property: "og:title", content: "Attribute Schemas · Cortanex RMS" }, { property: "og:description", content: "Custom attribute schema builder for industry-agnostic material profiling." }] }),
   component: Schemas,
 });
 

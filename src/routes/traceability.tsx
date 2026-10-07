@@ -17,7 +17,20 @@ export const Route = createFileRoute("/traceability")({
 function TracePage() {
   const { executions, recipes, audit } = useRms();
   const [q, setQ] = useState("");
-  const rows = executions.filter((e) => (e.batch + e.productionOrder + e.recipeCode + e.equipment + e.operator).toLowerCase().includes(q.toLowerCase()));
+  const [version, setVersion] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const versions = Array.from(new Set(executions.map((e) => `${e.recipeCode} ${e.version}`)));
+  const rows = executions.filter((e) => (e.batch + e.productionOrder + e.recipeCode + e.equipment + e.operator).toLowerCase().includes(q.toLowerCase())
+    && (version === "all" || `${e.recipeCode} ${e.version}` === version)
+    && (!from || e.startedAt.slice(0, 10) >= from) && (!to || e.startedAt.slice(0, 10) <= to));
+  const exportCsv = () => {
+    const head = "execution,recipe,version,order,batch,equipment,line,operator,started,finished,status,qc,yield,notes";
+    const body = rows.map((e) => [e.id, e.recipeCode, e.version, e.productionOrder, e.batch, e.equipment, e.line, e.operator, e.startedAt, e.finishedAt ?? "", e.status, e.qcStatus, e.actualYield ?? "", `"${(e.notes ?? "").replace(/"/g, "'")}"`].join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([[head, ...body].join("\n")], { type: "text/csv" }));
+    a.download = `trace_report_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  };
   const [sel, setSel] = useState<string | null>(executions[0]?.id ?? null);
   const e = executions.find((x) => x.id === sel);
   const r = e ? recipes.find((x) => x.id === e.recipeId) : undefined;
@@ -31,9 +44,17 @@ function TracePage() {
           <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Production Traceability</h1>
           <p className="mt-1 text-sm text-muted-foreground">Recipe · version · order · batch · equipment · time · operator · QC.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={version} onChange={(ev) => setVersion(ev.target.value)} aria-label="Recipe version" className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs">
+            <option value="all">All recipe versions</option>{versions.map((v) => <option key={v}>{v}</option>)}
+          </select>
+          <input type="date" value={from} onChange={(ev) => setFrom(ev.target.value)} aria-label="From" className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs" />
+          <input type="date" value={to} onChange={(ev) => setTo(ev.target.value)} aria-label="To" className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs" />
+          <button onClick={exportCsv} className="h-9 rounded-lg border border-border/60 bg-card/60 px-3 text-xs hover:text-primary">Export CSV</button>
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="Batch, order, equipment…" className="h-9 w-64 rounded-lg border border-border/60 bg-card/60 pl-8 pr-3 text-xs focus:border-primary/50 focus:outline-none" />
+          <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="Batch, order, equipment…" className="h-9 w-56 rounded-lg border border-border/60 bg-card/60 pl-8 pr-3 text-xs focus:border-primary/50 focus:outline-none" />
+        </div>
         </div>
       </div>
 
@@ -73,6 +94,7 @@ function TracePage() {
               <li><div className="text-[10px] uppercase tracking-wider text-muted-foreground">Execution</div>{e.operator} · {e.startedAt} → {e.finishedAt ?? "running"}{e.actualYield ? ` · yield ${e.actualYield}` : ""}</li>
               <li><div className="text-[10px] uppercase tracking-wider text-muted-foreground">Quality (CORTA QC)</div><StatusPill status={e.qcStatus} />{e.notes && <div className="mt-1 text-muted-foreground">{e.notes}</div>}</li>
             </ol>
+            {version !== "all" && <p className="mt-4 rounded-lg border border-warning/40 bg-warning/5 p-2 text-[11px] text-warning">Forward trace: {rows.length} batch(es) used {version}{rows.some((x) => x.qcStatus === "failed") ? ` — ${rows.filter((x) => x.qcStatus === "failed").length} failed QC` : ""}.</p>}
           </div>
         )}
       </div>

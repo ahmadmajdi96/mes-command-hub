@@ -4,8 +4,9 @@ import {
   HeadContent, Scripts, type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Bell, ChevronRight, LogOut, Loader2, ShieldAlert } from "lucide-react";
+import { ChevronRight, LogOut, Loader2, ShieldAlert } from "lucide-react";
 import { AuthScreen } from "@/components/auth-screen";
+import { NotificationBell } from "@/components/notification-bell";
 import { GlobalSearch } from "@/components/global-search";
 
 import appCss from "../styles.css?url";
@@ -98,7 +99,7 @@ const roleInitials: Record<Role, string> = {
 };
 
 function TopBar() {
-  const { role, roles, setRole, actor, signOut, audit } = useRms();
+  const { role, roles, setRole, actor, signOut } = useRms();
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
@@ -115,11 +116,8 @@ function TopBar() {
             {roles.map((r) => <option key={r}>{r}</option>)}
           </select>
         )}
-        <Link to="/audit" className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground transition hover:text-foreground" title="Recent activity">
-          <Bell className="h-4 w-4" />
-          {audit.length > 0 && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
-        </Link>
-        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-2 py-1">
+        <NotificationBell />
+        <Link to="/profile" title="My profile" className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-2 py-1 hover:border-primary/40">
           <div className="grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br from-primary to-info text-[10px] font-bold text-primary-foreground">
             {role ? roleInitials[role] : "—"}
           </div>
@@ -127,7 +125,7 @@ function TopBar() {
             <div className="font-medium">{actor}</div>
             <div className="text-[10px] text-muted-foreground">{role ?? "No role assigned"}</div>
           </div>
-        </div>
+        </Link>
         <button onClick={signOut} title="Sign out" className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground hover:text-destructive">
           <LogOut className="h-4 w-4" />
         </button>
@@ -136,8 +134,24 @@ function TopBar() {
   );
 }
 
+function useIdleSignOut() {
+  const { session, settings, signOut } = useRms();
+  const minutes = settings.organization.sessionTimeoutMin;
+  useEffect(() => {
+    if (!session || !minutes) return;
+    let t: ReturnType<typeof setTimeout>;
+    const reset = () => { clearTimeout(t); t = setTimeout(() => { signOut(); }, minutes * 60000); };
+    const evs = ["mousemove", "keydown", "click", "touchstart"];
+    evs.forEach((e) => window.addEventListener(e, reset));
+    reset();
+    return () => { clearTimeout(t); evs.forEach((e) => window.removeEventListener(e, reset)); };
+  }, [session, minutes, signOut]);
+}
+
 function Gate({ children }: { children: ReactNode }) {
-  const { session, ready, roles } = useRms();
+  const { session, ready, roles, users, userId } = useRms();
+  useIdleSignOut();
+  const disabled = users.find((u) => u.id === userId)?.status === "disabled";
   if (!ready) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!session) return <AuthScreen />;
   return (
@@ -147,7 +161,13 @@ function Gate({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
           <main className="flex-1 p-4 sm:p-6">
-            {roles.length === 0 ? (
+            {disabled ? (
+              <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-6 text-center">
+                <ShieldAlert className="mx-auto h-8 w-8 text-destructive" />
+                <h1 className="mt-3 font-display text-lg font-semibold">Account disabled</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Contact your RMS Administrator.</p>
+              </div>
+            ) : roles.length === 0 ? (
               <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-6 text-center">
                 <ShieldAlert className="mx-auto h-8 w-8 text-warning" />
                 <h1 className="mt-3 font-display text-lg font-semibold">Waiting for access</h1>

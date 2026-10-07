@@ -7,7 +7,7 @@ import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/en
 import type { Trial } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/trials")({
-  head: () => ({ meta: [{ title: "Research Trial Logs · Cortanex RMS" }, { name: "description", content: "Structured lab notebook capturing bench execution and fail-state history." }] }),
+  head: () => ({ meta: [{ title: "Research Trial Logs · Cortanex RMS" }, { name: "description", content: "Structured lab notebook capturing bench execution and fail-state history." }, { property: "og:title", content: "Research Trial Logs · Cortanex RMS" }, { property: "og:description", content: "Structured lab notebook capturing bench execution and fail-state history." }] }),
   component: Trials,
 });
 

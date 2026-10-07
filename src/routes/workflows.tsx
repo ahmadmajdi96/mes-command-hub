@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/status-pill";
 import { stageGates, statusLabel } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/workflows")({
-  head: () => ({ meta: [{ title: "Stage-Gate Pipelines · Cortanex RMS" }, { name: "description", content: "Configurable multi-stage approval pipelines for recipe release." }] }),
+  head: () => ({ meta: [{ title: "Approval Workflow · Cortanex RMS" }, { name: "description", content: "Configurable multi-stage approval pipelines for recipe release." }, { property: "og:title", content: "Approval Workflow · Cortanex RMS" }, { property: "og:description", content: "Configurable multi-stage approval pipelines for recipe release." }] }),
   component: Workflows,
 });
 
@@ -32,7 +32,7 @@ function Workflows() {
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative">
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Governance layer</div>
-          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Stage-Gate Pipelines</h1>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Approval Workflow</h1>
           <p className="mt-1 text-sm text-muted-foreground">Configurable multi-stage approval flow. Fields lock on gate entry.</p>
         </div>
 

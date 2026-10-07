@@ -4,7 +4,7 @@ import { Download, History as HistoryIcon, Search, Filter, User, ArrowRight, Shi
 import { useRms } from "@/lib/rms-store";
 
 export const Route = createFileRoute("/audit")({
-  head: () => ({ meta: [{ title: "Audit Trail · Cortanex RMS" }, { name: "description", content: "Tamper-proof field-level audit trail." }] }),
+  head: () => ({ meta: [{ title: "Audit Trail · Cortanex RMS" }, { name: "description", content: "Tamper-proof field-level audit trail." }, { property: "og:title", content: "Audit Trail · Cortanex RMS" }, { property: "og:description", content: "Tamper-proof field-level audit trail." }] }),
   component: Audit,
 });
 
@@ -41,6 +41,12 @@ function Audit() {
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">Immutable ledger</div>
+            <button onClick={() => {
+              const lines = ["time,user,action,entity,property,before,after,reason,version,signed", ...filtered.map((a) => [a.ts, a.user, a.action, a.entity, a.property, a.before, a.after, a.reason ?? "", a.version ?? "", a.signed ? "yes" : ""].map((v) => `"${String(v).replace(/"/g, "'").slice(0, 300)}"`).join(","))];
+              const el = document.createElement("a");
+              el.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+              el.download = `audit_${new Date().toISOString().slice(0, 10)}.csv`; el.click();
+            }} className="float-right rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs hover:text-primary">Export CSV</button>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Audit Trail</h1>
             <p className="mt-1 text-sm text-muted-foreground">Every atomic field change — decoupled, timestamped, tamper-evident.</p>
           </div>

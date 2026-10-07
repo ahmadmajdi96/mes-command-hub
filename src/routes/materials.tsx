@@ -6,7 +6,7 @@ import type { Material } from "@/lib/rms-data";
 import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/materials")({
-  head: () => ({ meta: [{ title: "Material Catalog · Cortanex RMS" }, { name: "description", content: "Master raw material catalog with user-defined attribute schemas." }] }),
+  head: () => ({ meta: [{ title: "Material Catalog · Cortanex RMS" }, { name: "description", content: "Master raw material catalog with user-defined attribute schemas." }, { property: "og:title", content: "Material Catalog · Cortanex RMS" }, { property: "og:description", content: "Master raw material catalog with user-defined attribute schemas." }] }),
   component: Materials,
 });
 
