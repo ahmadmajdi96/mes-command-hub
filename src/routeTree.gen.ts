@@ -21,6 +21,7 @@ import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as RetentionRouteImport } from './routes/retention'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as QaInsightsRouteImport } from './routes/qa-insights'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
@@ -94,6 +95,11 @@ const RetentionRoute = RetentionRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QaInsightsRoute = QaInsightsRouteImport.update({
+  id: '/qa-insights',
+  path: '/qa-insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/profile': typeof ProfileRoute
+  '/qa-insights': typeof QaInsightsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/review-queue': typeof ReviewQueueRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/profile': typeof ProfileRoute
+  '/qa-insights': typeof QaInsightsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/review-queue': typeof ReviewQueueRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/profile': typeof ProfileRoute
+  '/qa-insights': typeof QaInsightsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/review-queue': typeof ReviewQueueRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/materials'
     | '/profile'
+    | '/qa-insights'
     | '/reset-password'
     | '/retention'
     | '/review-queue'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/materials'
     | '/profile'
+    | '/qa-insights'
     | '/reset-password'
     | '/retention'
     | '/review-queue'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/materials'
     | '/profile'
+    | '/qa-insights'
     | '/reset-password'
     | '/retention'
     | '/review-queue'
@@ -350,6 +362,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
   ProfileRoute: typeof ProfileRoute
+  QaInsightsRoute: typeof QaInsightsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RetentionRoute: typeof RetentionRoute
   ReviewQueueRoute: typeof ReviewQueueRoute
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qa-insights': {
+      id: '/qa-insights'
+      path: '/qa-insights'
+      fullPath: '/qa-insights'
+      preLoaderRoute: typeof QaInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -566,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,
   ProfileRoute: ProfileRoute,
+  QaInsightsRoute: QaInsightsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RetentionRoute: RetentionRoute,
   ReviewQueueRoute: ReviewQueueRoute,
