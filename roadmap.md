@@ -1,7 +1,7 @@
 # Roadmap (production readiness)
 - [x] Phase 1: sign-in, roles in DB, data saved, server-enforced workflow + audit
-- [ ] Remove Google sign-in (multi-role system: email accounts only)
-- [ ] Phase 2: e-signature, version diff, notifications, QA queue, configurable gates
-- [ ] Phase 3: step-by-step execution screen, trace search/export, import templates + preview
-- [ ] Phase 4: live MES / CORTA QC / ERP endpoints, message log, real hashed API keys
-- [ ] Phase 5: role dashboards, retention/legal hold, settings, profile, access-denied
+- [x] Remove Google sign-in (email accounts only)
+- [x] Phase 2: e-signature, version diff, notifications, review queue, configurable approvals
+- [x] Phase 3: step-by-step batch run, trace filters/export, import templates + preview, Excel
+- [x] Phase 4: live external API with hashed keys, outbound publishing, message log + retry, health checks
+- [x] Phase 5: role task panels, retention/legal hold, settings, profile, access-denied, idle sign-out
