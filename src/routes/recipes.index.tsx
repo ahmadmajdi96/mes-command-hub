@@ -214,13 +214,13 @@ function RecipesPage() {
         title="New recipe draft"
         subtitle="Add components and process steps after creating the recipe."
         fields={fields}
-        initial={{ status: "draft", targetYieldValue: 1000, targetYieldUnit: "kg", createdBy: "M. Fahad" }}
+        initial={{ targetYieldValue: 1000, targetYieldUnit: "kg" }}
         onSubmit={(v: any) => {
           const id = `REC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
           addRecipe({
             id, code: v.code, name: v.name, version: v.version, project: v.project,
             classification: v.classification, branchLabel: v.branchLabel || undefined,
-            status: v.status, createdBy: v.createdBy,
+            status: "draft", createdBy: actor,
             targetYield: { value: Number(v.targetYieldValue), unit: v.targetYieldUnit },
             compliance: { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 180 },
           } as any);
