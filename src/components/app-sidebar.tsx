@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import {
+import { Sparkles, Link, useRouterState } from "@tanstack/react-router";
+import { Sparkles,
   LayoutDashboard, FlaskConical, Boxes, GitCompareArrows, GitBranch,
   ClipboardList, Beaker, Workflow, KeyRound, History, Database, Ruler,
   ShieldCheck, Users, Settings, Archive, Factory, Route as RouteIcon, Plug, ArrowLeftRight, ListChecks,
@@ -13,6 +13,7 @@ const overview = [
   { title: "R&D Control Center", url: "/", icon: LayoutDashboard },
   { title: "Recipes", url: "/recipes", icon: FlaskConical },
   { title: "Review Queue", url: "/review-queue", icon: ClipboardList },
+  { title: "QA Insights", url: "/qa-insights", icon: Sparkles },
   { title: "Variant Branches", url: "/branches", icon: GitBranch },
   { title: "Comparison Engine", url: "/compare", icon: GitCompareArrows },
 ];
