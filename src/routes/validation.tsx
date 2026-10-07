@@ -97,7 +97,7 @@ function ValidationPage() {
 
       <EntityFormDialog open={adding} onClose={() => setAdding(false)} title="New validation rule" fields={fields}
         initial={{ kind: "required_param", severity: "error", config: {} }}
-        onSubmit={(v) => { addRule({ name: v.name, kind: v.kind, severity: v.severity, enabled: true, config: v.config ?? {} }); setAdding(false); }} />
+        onSubmit={(v: any) => { addRule({ name: v.name, kind: v.kind, severity: v.severity, enabled: true, config: v.config ?? {} }); setAdding(false); }} />
     </div>
   );
 }

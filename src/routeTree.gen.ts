@@ -14,11 +14,15 @@ import { Route as ValidationRouteImport } from './routes/validation'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as UnitsRouteImport } from './routes/units'
 import { Route as TrialsRouteImport } from './routes/trials'
+import { Route as TraceabilityRouteImport } from './routes/traceability'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchemasRouteImport } from './routes/schemas'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as RetentionRouteImport } from './routes/retention'
 import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as ExecutionRouteImport } from './routes/execution'
+import { Route as DataExchangeRouteImport } from './routes/data-exchange'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as AuditRouteImport } from './routes/audit'
@@ -52,6 +56,11 @@ const TrialsRoute = TrialsRouteImport.update({
   path: '/trials',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TraceabilityRoute = TraceabilityRouteImport.update({
+  id: '/traceability',
+  path: '/traceability',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -75,6 +84,21 @@ const RetentionRoute = RetentionRouteImport.update({
 const MaterialsRoute = MaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutionRoute = ExecutionRouteImport.update({
+  id: '/execution',
+  path: '/execution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataExchangeRoute = DataExchangeRouteImport.update({
+  id: '/data-exchange',
+  path: '/data-exchange',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -119,11 +143,15 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuditRoute
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
+  '/data-exchange': typeof DataExchangeRoute
+  '/execution': typeof ExecutionRoute
+  '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
+  '/traceability': typeof TraceabilityRoute
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
@@ -138,11 +166,15 @@ export interface FileRoutesByTo {
   '/audit': typeof AuditRoute
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
+  '/data-exchange': typeof DataExchangeRoute
+  '/execution': typeof ExecutionRoute
+  '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
+  '/traceability': typeof TraceabilityRoute
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
@@ -158,11 +190,15 @@ export interface FileRoutesById {
   '/audit': typeof AuditRoute
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
+  '/data-exchange': typeof DataExchangeRoute
+  '/execution': typeof ExecutionRoute
+  '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
+  '/traceability': typeof TraceabilityRoute
   '/trials': typeof TrialsRoute
   '/units': typeof UnitsRoute
   '/users': typeof UsersRoute
@@ -179,11 +215,15 @@ export interface FileRouteTypes {
     | '/audit'
     | '/branches'
     | '/compare'
+    | '/data-exchange'
+    | '/execution'
+    | '/integrations'
     | '/materials'
     | '/retention'
     | '/roles'
     | '/schemas'
     | '/settings'
+    | '/traceability'
     | '/trials'
     | '/units'
     | '/users'
@@ -198,11 +238,15 @@ export interface FileRouteTypes {
     | '/audit'
     | '/branches'
     | '/compare'
+    | '/data-exchange'
+    | '/execution'
+    | '/integrations'
     | '/materials'
     | '/retention'
     | '/roles'
     | '/schemas'
     | '/settings'
+    | '/traceability'
     | '/trials'
     | '/units'
     | '/users'
@@ -217,11 +261,15 @@ export interface FileRouteTypes {
     | '/audit'
     | '/branches'
     | '/compare'
+    | '/data-exchange'
+    | '/execution'
+    | '/integrations'
     | '/materials'
     | '/retention'
     | '/roles'
     | '/schemas'
     | '/settings'
+    | '/traceability'
     | '/trials'
     | '/units'
     | '/users'
@@ -237,11 +285,15 @@ export interface RootRouteChildren {
   AuditRoute: typeof AuditRoute
   BranchesRoute: typeof BranchesRoute
   CompareRoute: typeof CompareRoute
+  DataExchangeRoute: typeof DataExchangeRoute
+  ExecutionRoute: typeof ExecutionRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
   RetentionRoute: typeof RetentionRoute
   RolesRoute: typeof RolesRoute
   SchemasRoute: typeof SchemasRoute
   SettingsRoute: typeof SettingsRoute
+  TraceabilityRoute: typeof TraceabilityRoute
   TrialsRoute: typeof TrialsRoute
   UnitsRoute: typeof UnitsRoute
   UsersRoute: typeof UsersRoute
@@ -288,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrialsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/traceability': {
+      id: '/traceability'
+      path: '/traceability'
+      fullPath: '/traceability'
+      preLoaderRoute: typeof TraceabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -321,6 +380,27 @@ declare module '@tanstack/react-router' {
       path: '/materials'
       fullPath: '/materials'
       preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/execution': {
+      id: '/execution'
+      path: '/execution'
+      fullPath: '/execution'
+      preLoaderRoute: typeof ExecutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-exchange': {
+      id: '/data-exchange'
+      path: '/data-exchange'
+      fullPath: '/data-exchange'
+      preLoaderRoute: typeof DataExchangeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -381,11 +461,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuditRoute: AuditRoute,
   BranchesRoute: BranchesRoute,
   CompareRoute: CompareRoute,
+  DataExchangeRoute: DataExchangeRoute,
+  ExecutionRoute: ExecutionRoute,
+  IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,
   RetentionRoute: RetentionRoute,
   RolesRoute: RolesRoute,
   SchemasRoute: SchemasRoute,
   SettingsRoute: SettingsRoute,
+  TraceabilityRoute: TraceabilityRoute,
   TrialsRoute: TrialsRoute,
   UnitsRoute: UnitsRoute,
   UsersRoute: UsersRoute,
