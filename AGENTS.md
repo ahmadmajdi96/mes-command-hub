@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Permissions and recipe lifecycle live in src/lib/rms-data.ts (can/ACTION_META); UI must gate actions through useRms().can — single source for RBAC checks.
