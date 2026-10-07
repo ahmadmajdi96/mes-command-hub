@@ -52,7 +52,6 @@ function RecipeDetail() {
   const children = recipes.filter((r) => r.parentId === recipe.id);
 
   const currentGateIdx = GATE_ORDER.indexOf(recipe.status);
-  const nextGate = currentGateIdx >= 0 && currentGateIdx < GATE_ORDER.length - 1 ? GATE_ORDER[currentGateIdx + 1] : null;
 
   const itemFields = useMemo<FieldSpec[]>(() => [
     { key: "refType", label: "Reference type", type: "select", required: true, options: [
@@ -124,8 +123,8 @@ function RecipeDetail() {
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               <StatusPill status={recipe.status} />
-              <button onClick={() => setEditingMeta(true)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /> Edit</button>
-              <button onClick={() => setDeleteRecipeOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive hover:bg-destructive/20"><Trash2 className="h-3 w-3" /> Delete</button>
+              {!locked && <button onClick={() => setEditingMeta(true)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /> Edit</button>}
+              {recipe.status === "draft" && can("recipe.edit") && <button onClick={() => setDeleteRecipeOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive hover:bg-destructive/20"><Trash2 className="h-3 w-3" /> Delete</button>}
             </div>
             {locked && <span className="inline-flex items-center gap-1 rounded-md bg-warning/10 px-2 py-1 text-[11px] text-warning"><Lock className="h-3 w-3" /> Fields locked</span>}
           </div>
