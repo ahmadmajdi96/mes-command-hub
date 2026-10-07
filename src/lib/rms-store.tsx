@@ -26,7 +26,12 @@ const DB_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_DB).map(([k, v]) =>
 
 export interface AppUser { id: string; name: string; email: string; status: string; roles: data.Role[] }
 
-type Kind = "material" | "unit" | "schema" | "trial" | "api_key" | "validation_rule" | "execution" | "integration";
+type Kind = "material" | "unit" | "schema" | "trial" | "api_key" | "validation_rule" | "execution" | "integration" | "setting";
+
+export interface ApiKeyRow { id: string; label: string; prefix: string; scopes: string[]; expires_at: string | null; active: boolean; created_by_name: string; created_at: string; last_used_at: string | null; call_count: number }
+export interface NotificationRow { id: number; title: string; body: string; link: string | null; read: boolean; created_at: string }
+export interface IntegrationMessage { id: number; integration_id: string; direction: string; event: string; status: string; response: string | null; attempts: number; created_at: string; payload: unknown }
+export type Settings = { workflow: { qaApprovalsRequired: number; reviewSlaDays: number; requireSignature: boolean }; organization: { name: string; timezone: string; codePrefix: string; defaultUnit: string; sessionTimeoutMin: number }; retention: { auditYears: number; releasedRecipes: string; draftIdleDays: number; trialYears: number; executionYears: number; legalHold: boolean } };
 
 type Store = {
   session: Session | null;
@@ -43,7 +48,14 @@ type Store = {
   materials: data.Material[];
   recipes: data.Recipe[];
   trials: data.Trial[];
-  apiKeys: data.ApiKey[];
+  apiKeys: ApiKeyRow[];
+  notifications: NotificationRow[];
+  messages: IntegrationMessage[];
+  settings: Settings;
+  updateSetting: <K extends keyof Settings>(id: K, patch: Partial<Settings[K]>) => Promise<void>;
+  markNotificationsRead: (ids?: number[]) => Promise<void>;
+  createApiKey: (label: string, scopes: string[], expiresAt: string | null) => Promise<string | null>;
+  loadMessages: () => Promise<void>;
   schemas: data.AttributeSchema[];
   units: data.UnitDef[];
   users: AppUser[];
@@ -53,7 +65,7 @@ type Store = {
   integrations: data.IntegrationEndpoint[];
 
   logAudit: (e: Omit<data.AuditEntry, "id" | "ts" | "user">) => void;
-  transition: (recipeId: string, action: WorkflowAction, reason: string) => Promise<{ ok: boolean; error?: string }>;
+  transition: (recipeId: string, action: WorkflowAction, reason: string, sig?: string) => Promise<{ ok: boolean; error?: string }>;
   newVersion: (recipeId: string, reason: string) => Promise<string | null>;
   copyRecipe: (recipeId: string) => Promise<string | null>;
 
@@ -75,7 +87,6 @@ type Store = {
   updateTrial: (id: string, patch: Partial<data.Trial>) => void;
   deleteTrial: (id: string) => void;
 
-  addApiKey: (k: Omit<data.ApiKey, "id" | "createdAt" | "lastUsed" | "active" | "callsToday" | "tokenPreview">) => void;
   revokeKey: (id: string) => void;
   deleteApiKey: (id: string) => void;
 
@@ -131,9 +142,12 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<data.Role | null>(null);
   const [actor, setActor] = useState("");
   const [recipes, setRecipes] = useState<data.Recipe[]>([]);
-  const [records, setRecords] = useState<Record<Kind, unknown[]>>({ material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [] });
+  const [records, setRecords] = useState<Record<Kind, unknown[]>>({ material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [], setting: [] });
   const [users, setUsers] = useState<AppUser[]>([]);
   const [audit, setAudit] = useState<data.AuditEntry[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKeyRow[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+  const [messages, setMessages] = useState<IntegrationMessage[]>([]);
   const userId = session?.user.id ?? null;
 
   useEffect(() => {
@@ -150,7 +164,7 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
   const loadRecords = useCallback(async () => {
     const { data: rows, error } = await supabase.from("rms_records").select("kind, data").order("updated_at", { ascending: false });
     if (error) throw error;
-    const next: Record<Kind, unknown[]> = { material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [] };
+    const next: Record<Kind, unknown[]> = { material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [], setting: [] };
     (rows ?? []).forEach((r) => next[r.kind as Kind]?.push(r.data));
     next.unit.reverse(); next.schema.reverse(); next.validation_rule.sort((a, b) => String((a as { id: string }).id).localeCompare(String((b as { id: string }).id)));
     setRecords(next);
@@ -159,7 +173,7 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
     const { data: rows } = await supabase.from("audit_log").select("*").order("ts", { ascending: false }).limit(500);
     setAudit((rows ?? []).map((a) => ({
       id: String(a.id), ts: a.ts.slice(0, 19).replace("T", " "), user: a.actor_name, action: a.action, entity: a.entity,
-      property: a.property, before: a.before_value, after: a.after_value, reason: a.reason ?? undefined, version: a.version ?? undefined,
+      property: a.property, before: a.before_value, after: a.after_value, reason: a.reason ?? undefined, version: a.version ?? undefined, signed: a.signed,
     })));
   }, []);
   const loadUsers = useCallback(async () => {
@@ -173,10 +187,30 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
     })));
   }, []);
 
+  const loadExtras = useCallback(async () => {
+    const [{ data: keys }, { data: notes }] = await Promise.all([
+      supabase.from("api_keys").select("id, label, prefix, scopes, expires_at, active, created_by_name, created_at, last_used_at, call_count").order("created_at", { ascending: false }),
+      supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(50),
+    ]);
+    setApiKeys((keys ?? []) as ApiKeyRow[]);
+    setNotifications((notes ?? []) as NotificationRow[]);
+  }, []);
+  const loadMessages = useCallback(async () => {
+    const { data: rows } = await supabase.from("integration_messages").select("*").order("created_at", { ascending: false }).limit(200);
+    setMessages((rows ?? []) as IntegrationMessage[]);
+  }, []);
+
   const refresh = useCallback(async () => {
-    try { await Promise.all([loadRecipes(), loadRecords(), loadAudit(), loadUsers()]); }
+    try { await Promise.all([loadRecipes(), loadRecords(), loadAudit(), loadUsers(), loadExtras(), loadMessages()]); }
     catch (e) { toast.error(errMsg(e)); }
-  }, [loadRecipes, loadRecords, loadAudit, loadUsers]);
+  }, [loadRecipes, loadRecords, loadAudit, loadUsers, loadExtras, loadMessages]);
+
+  // live notifications + periodic refresh of shared data
+  useEffect(() => {
+    if (!userId) return;
+    const t = setInterval(() => { loadExtras(); }, 30000);
+    return () => clearInterval(t);
+  }, [userId, loadExtras]);
 
   useEffect(() => {
     if (!userId) { setRoles([]); setRole(null); return; }
@@ -244,7 +278,31 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
     materials: records.material as data.Material[],
     recipes,
     trials: records.trial as data.Trial[],
-    apiKeys: records.api_key as data.ApiKey[],
+    apiKeys, notifications, messages, loadMessages,
+    settings: (() => {
+      const get = (id: string) => (records.setting as { id: string }[]).find((x) => x.id === id) as Record<string, unknown> | undefined;
+      return {
+        workflow: { qaApprovalsRequired: 1, reviewSlaDays: 3, requireSignature: true, ...(get("workflow") ?? {}) },
+        organization: { name: "", timezone: "UTC", codePrefix: "REC", defaultUnit: "kg", sessionTimeoutMin: 30, ...(get("organization") ?? {}) },
+        retention: { auditYears: 10, releasedRecipes: "forever", draftIdleDays: 180, trialYears: 5, executionYears: 10, legalHold: false, ...(get("retention") ?? {}) },
+      } as Settings;
+    })(),
+    updateSetting: async (id, patch) => {
+      const cur = (records.setting as { id: string }[]).find((x) => x.id === id) ?? { id };
+      await upsert("setting", { ...cur, ...patch, id });
+    },
+    markNotificationsRead: async (ids) => {
+      const q = supabase.from("notifications").update({ read: true }).eq("read", false);
+      const { error } = ids?.length ? await q.in("id", ids) : await q;
+      if (error) toast.error(errMsg(error));
+      await loadExtras();
+    },
+    createApiKey: async (label, scopes, expiresAt) => {
+      const { data: token, error } = await supabase.rpc("create_api_key", { _label: label, _scopes: scopes, _expires_at: expiresAt ?? undefined });
+      if (error) { toast.error(errMsg(error)); return null; }
+      await Promise.all([loadExtras(), loadAudit()]);
+      return token as string;
+    },
     schemas: records.schema as data.AttributeSchema[],
     units: records.unit as data.UnitDef[],
     users, audit,
@@ -257,9 +315,9 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
         supabase.rpc("log_event", { _action: e.action, _entity: e.entity, _property: e.property, _after: e.after, _version: e.version ?? undefined }).then(() => loadAudit());
       }
     },
-    transition: async (recipeId, action, reason) => {
-      const { error } = await supabase.rpc("transition_recipe", { _id: recipeId, _action: action, _reason: reason });
-      await Promise.all([loadRecipes(), loadAudit()]);
+    transition: async (recipeId, action, reason, sig) => {
+      const { error } = await supabase.rpc("transition_recipe", { _id: recipeId, _action: action, _reason: reason, _sig: sig });
+      await Promise.all([loadRecipes(), loadAudit(), loadExtras()]);
       return error ? { ok: false, error: errMsg(error) } : { ok: true };
     },
     newVersion: async (recipeId) => {
@@ -305,12 +363,8 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
     updateTrial: (id, patch) => { const x = find<data.Trial>("trial", id); if (x) upsert("trial", { ...x, ...patch }); },
     deleteTrial: (id) => { remove("trial", id); },
 
-    addApiKey: (k) => {
-      upsert("api_key", { ...k, id: rid("KEY"), createdAt: nowStamp(), lastUsed: null, active: true, callsToday: 0,
-        tokenPreview: `rms_live_${Math.random().toString(36).slice(2, 10)}…${Math.random().toString(36).slice(2, 6)}` });
-    },
-    revokeKey: (id) => { const x = find<data.ApiKey>("api_key", id); if (x) upsert("api_key", { ...x, active: false }); },
-    deleteApiKey: (id) => { remove("api_key", id); },
+    revokeKey: async (id) => { const { error } = await supabase.from("api_keys").update({ active: false }).eq("id", id); if (error) toast.error(errMsg(error)); await Promise.all([loadExtras(), loadAudit()]); },
+    deleteApiKey: async (id) => { const { error } = await supabase.from("api_keys").delete().eq("id", id); if (error) toast.error(errMsg(error)); await Promise.all([loadExtras(), loadAudit()]); },
 
     addSchema: (s) => { upsert("schema", { ...s, id: rid("sch"), fields: [] }); },
     updateSchema: (id, patch) => { const x = find<data.AttributeSchema>("schema", id); if (x) upsert("schema", { ...x, ...patch }); },
@@ -356,7 +410,7 @@ export function RmsStoreProvider({ children }: { children: ReactNode }) {
       return rs.length;
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [session, ready, userId, roles, role, actor, can, refresh, records, recipes, users, audit, upsert, remove, patchRecipe, loadRecipes, loadAudit, loadUsers]);
+  }), [session, ready, userId, roles, role, actor, can, refresh, records, recipes, users, audit, apiKeys, notifications, messages, upsert, remove, patchRecipe, loadRecipes, loadAudit, loadUsers, loadExtras, loadMessages]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

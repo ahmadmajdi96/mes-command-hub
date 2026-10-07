@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          active: boolean
+          call_count: number
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          expires_at: string | null
+          id: string
+          key_hash: string
+          label: string
+          last_used_at: string | null
+          prefix: string
+          scopes: string[]
+        }
+        Insert: {
+          active?: boolean
+          call_count?: number
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          label: string
+          last_used_at?: string | null
+          prefix: string
+          scopes?: string[]
+        }
+        Update: {
+          active?: boolean
+          call_count?: number
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          label?: string
+          last_used_at?: string | null
+          prefix?: string
+          scopes?: string[]
+        }
+        Relationships: []
+      }
+      app_config: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -25,6 +85,7 @@ export type Database = {
           id: number
           property: string
           reason: string | null
+          signed: boolean
           ts: string
           version: string | null
         }
@@ -38,6 +99,7 @@ export type Database = {
           id?: number
           property?: string
           reason?: string | null
+          signed?: boolean
           ts?: string
           version?: string | null
         }
@@ -51,8 +113,78 @@ export type Database = {
           id?: number
           property?: string
           reason?: string | null
+          signed?: boolean
           ts?: string
           version?: string | null
+        }
+        Relationships: []
+      }
+      integration_messages: {
+        Row: {
+          attempts: number
+          created_at: string
+          direction: string
+          event: string
+          id: number
+          integration_id: string
+          payload: Json
+          response: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          direction: string
+          event: string
+          id?: number
+          integration_id: string
+          payload?: Json
+          response?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          direction?: string
+          event?: string
+          id?: number
+          integration_id?: string
+          payload?: Json
+          response?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: number
+          link: string | null
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: number
+          link?: string | null
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: number
+          link?: string | null
+          read?: boolean
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -194,6 +326,10 @@ export type Database = {
     }
     Functions: {
       can_write_record: { Args: { _kind: string }; Returns: boolean }
+      create_api_key: {
+        Args: { _expires_at?: string; _label: string; _scopes: string[] }
+        Returns: string
+      }
       current_actor_name: { Args: never; Returns: string }
       ensure_profile: { Args: { _full_name?: string }; Returns: undefined }
       has_any_role: {
@@ -224,8 +360,17 @@ export type Database = {
         Args: { _copy?: boolean; _id: string }
         Returns: string
       }
+      notify_role: {
+        Args: {
+          _body: string
+          _link: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _title: string
+        }
+        Returns: undefined
+      }
       transition_recipe: {
-        Args: { _action: string; _id: string; _reason?: string }
+        Args: { _action: string; _id: string; _reason?: string; _sig?: string }
         Returns: string
       }
       write_audit: {

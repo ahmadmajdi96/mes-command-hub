@@ -18,8 +18,10 @@ import { Route as TraceabilityRouteImport } from './routes/traceability'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchemasRouteImport } from './routes/schemas'
 import { Route as RolesRouteImport } from './routes/roles'
+import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as RetentionRouteImport } from './routes/retention'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as ExecutionRouteImport } from './routes/execution'
@@ -30,7 +32,9 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ApiKeysRouteImport } from './routes/api-keys'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
+import { Route as RunIdRouteImport } from './routes/run.$id'
 import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
+import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const WorkflowsRoute = WorkflowsRouteImport.update({
   id: '/workflows',
@@ -77,6 +81,11 @@ const RolesRoute = RolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewQueueRoute = ReviewQueueRouteImport.update({
+  id: '/review-queue',
+  path: '/review-queue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RetentionRoute = RetentionRouteImport.update({
   id: '/retention',
   path: '/retention',
@@ -85,6 +94,11 @@ const RetentionRoute = RetentionRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -137,9 +151,19 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
   path: '/recipes/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RunIdRoute = RunIdRouteImport.update({
+  id: '/run/$id',
+  path: '/run/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesIdRoute = RecipesIdRouteImport.update({
   id: '/recipes/$id',
   path: '/recipes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
+  id: '/api/public/v1/$',
+  path: '/api/public/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -153,8 +177,10 @@ export interface FileRoutesByFullPath {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -165,7 +191,9 @@ export interface FileRoutesByFullPath {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
+  '/run/$id': typeof RunIdRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -177,8 +205,10 @@ export interface FileRoutesByTo {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -189,7 +219,9 @@ export interface FileRoutesByTo {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
+  '/run/$id': typeof RunIdRoute
   '/recipes': typeof RecipesIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -202,8 +234,10 @@ export interface FileRoutesById {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -214,7 +248,9 @@ export interface FileRoutesById {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
+  '/run/$id': typeof RunIdRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -228,8 +264,10 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/profile'
     | '/reset-password'
     | '/retention'
+    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -240,7 +278,9 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
+    | '/run/$id'
     | '/recipes/'
+    | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,8 +292,10 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/profile'
     | '/reset-password'
     | '/retention'
+    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -264,7 +306,9 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
+    | '/run/$id'
     | '/recipes'
+    | '/api/public/v1/$'
   id:
     | '__root__'
     | '/'
@@ -276,8 +320,10 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/profile'
     | '/reset-password'
     | '/retention'
+    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -288,7 +334,9 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
+    | '/run/$id'
     | '/recipes/'
+    | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,8 +349,10 @@ export interface RootRouteChildren {
   ExecutionRoute: typeof ExecutionRoute
   IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RetentionRoute: typeof RetentionRoute
+  ReviewQueueRoute: typeof ReviewQueueRoute
   RolesRoute: typeof RolesRoute
   SchemasRoute: typeof SchemasRoute
   SettingsRoute: typeof SettingsRoute
@@ -313,7 +363,9 @@ export interface RootRouteChildren {
   ValidationRoute: typeof ValidationRoute
   WorkflowsRoute: typeof WorkflowsRoute
   RecipesIdRoute: typeof RecipesIdRoute
+  RunIdRoute: typeof RunIdRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
+  ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -381,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RolesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review-queue': {
+      id: '/review-queue'
+      path: '/review-queue'
+      fullPath: '/review-queue'
+      preLoaderRoute: typeof ReviewQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/retention': {
       id: '/retention'
       path: '/retention'
@@ -393,6 +452,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/materials': {
@@ -465,11 +531,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/run/$id': {
+      id: '/run/$id'
+      path: '/run/$id'
+      fullPath: '/run/$id'
+      preLoaderRoute: typeof RunIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/$id': {
       id: '/recipes/$id'
       path: '/recipes/$id'
       fullPath: '/recipes/$id'
       preLoaderRoute: typeof RecipesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/$': {
+      id: '/api/public/v1/$'
+      path: '/api/public/v1/$'
+      fullPath: '/api/public/v1/$'
+      preLoaderRoute: typeof ApiPublicV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -485,8 +565,10 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutionRoute: ExecutionRoute,
   IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RetentionRoute: RetentionRoute,
+  ReviewQueueRoute: ReviewQueueRoute,
   RolesRoute: RolesRoute,
   SchemasRoute: SchemasRoute,
   SettingsRoute: SettingsRoute,
@@ -497,7 +579,9 @@ const rootRouteChildren: RootRouteChildren = {
   ValidationRoute: ValidationRoute,
   WorkflowsRoute: WorkflowsRoute,
   RecipesIdRoute: RecipesIdRoute,
+  RunIdRoute: RunIdRoute,
   RecipesIndexRoute: RecipesIndexRoute,
+  ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -5,7 +5,7 @@ import { useRms } from "@/lib/rms-store";
 import { StatusPill } from "@/components/status-pill";
 
 export const Route = createFileRoute("/compare")({
-  head: () => ({ meta: [{ title: "Comparison Engine · Cortanex RMS" }, { name: "description", content: "Side-by-side sandbox to analyze deviations between recipe variants." }] }),
+  head: () => ({ meta: [{ title: "Comparison Engine · Cortanex RMS" }, { name: "description", content: "Side-by-side comparison of recipe versions with deltas." }, { property: "og:title", content: "Comparison Engine · Cortanex RMS" }, { property: "og:description", content: "Side-by-side comparison of recipe versions with deltas." }] }),
   component: Compare,
 });
 
@@ -19,6 +19,12 @@ type Row = {
 };
 
 function Compare() {
+  const { recipes } = useRms();
+  if (recipes.length < 2) return <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">At least two recipe versions you can see are needed to compare.</div>;
+  return <CompareInner />;
+}
+
+function CompareInner() {
   const { recipes } = useRms();
   const [aId, setAId] = useState(recipes[0].id);
   const [bId, setBId] = useState(recipes[1]?.id ?? recipes[0].id);
@@ -97,7 +103,12 @@ function Compare() {
             <p className="mt-1 text-sm text-muted-foreground">Side-by-side deviation grid with computed Δ absolute and Δ%, grouped by concern.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={() => {
+              const lines = [`item,kind,${A.code} ${A.version},${B.code} ${B.version},delta,unit`, ...rows.map((r) => [`"${r.label}"`, r.kind, r.a ?? "", r.b ?? "", r.a !== undefined && r.b !== undefined ? (r.b - r.a).toFixed(4) : "", r.unit ?? ""].join(","))];
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+              a.download = `compare_${A.code}_${A.version}_vs_${B.code}_${B.version}.csv`; a.click();
+            }} className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
               <Download className="h-3.5 w-3.5" /> Export CSV
             </button>
             <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">

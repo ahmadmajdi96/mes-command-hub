@@ -6,7 +6,7 @@ import type { UnitDef } from "@/lib/rms-data";
 import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/units")({
-  head: () => ({ meta: [{ title: "Units & Conversions · Cortanex RMS" }, { name: "description", content: "Universal conversion engine spanning mass, volume, counts and discretes." }] }),
+  head: () => ({ meta: [{ title: "Units & Conversions · Cortanex RMS" }, { name: "description", content: "Universal conversion engine spanning mass, volume, counts and discretes." }, { property: "og:title", content: "Units & Conversions · Cortanex RMS" }, { property: "og:description", content: "Universal conversion engine spanning mass, volume, counts and discretes." }] }),
   component: Units,
 });
 

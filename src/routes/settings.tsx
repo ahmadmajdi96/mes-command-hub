@@ -1,112 +1,57 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRms } from "@/lib/rms-store";
-import { Bell, Building2, Palette, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Building2, Workflow, Save, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { useRms, type Settings } from "@/lib/rms-store";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings · Cortanex RMS" }, { name: "description", content: "Workspace settings, notifications and API error handling reference." }] }),
+  head: () => ({ meta: [
+    { title: "Settings · Cortanex RMS" },
+    { name: "description", content: "Organization profile, approval workflow and e-signature policy." },
+    { property: "og:title", content: "Settings · Cortanex RMS" },
+    { property: "og:description", content: "Organization profile, approval workflow and e-signature policy." },
+  ] }),
   component: SettingsPage,
 });
 
-const ERRORS = [
-  { code: "401", sub: "INVALID_AUTH_TOKEN", cause: "API key malformed, unrecognized, or expired.", remediation: "Reject request. Block DB connection. Log attempt to security trail." },
-  { code: "403", sub: "RECIPE_STATE_LOCKED", cause: "PUT / DELETE targeting a recipe in Under Review or Released state.", remediation: "Block transaction. Return current version to client to force sync." },
-  { code: "403", sub: "SCOPE_INSUFFICIENT", cause: "Token missing required scope for the requested endpoint.", remediation: "Reject request. Return required scope list." },
-  { code: "409", sub: "VERSION_MISMATCH", cause: "Client PUT payload is stale relative to server master.", remediation: "Return current server version. Ask client to rebase and retry." },
-  { code: "422", sub: "TOLERANCE_VIOLATION", cause: "Line item quantity outside min/max tolerance percentages.", remediation: "Reject write. Return per-field violation details." },
-  { code: "429", sub: "RATE_LIMIT_EXCEEDED", cause: "Token exceeded per-hour throttle threshold.", remediation: "Reject with Retry-After header. Log usage event." },
-];
+const field = "h-9 w-full rounded-lg border border-border/60 bg-card/60 px-3 text-sm focus:border-primary/50 focus:outline-none disabled:opacity-60";
 
 function SettingsPage() {
-  const { role } = useRms();
+  const { settings, updateSetting, can } = useRms();
+  const admin = can("settings.manage");
+  const [org, setOrg] = useState<Settings["organization"]>(settings.organization);
+  const [wf, setWf] = useState<Settings["workflow"]>(settings.workflow);
+  useEffect(() => { setOrg(settings.organization); setWf(settings.workflow); }, [settings.organization, settings.workflow]);
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Signed in as <span className="text-primary">{role}</span></p>
+      <div className="glass-panel rounded-2xl p-6">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Changes are saved to the database and recorded in the audit trail.</p>
+        {!admin && <p className="mt-2 flex items-center gap-1 text-xs text-warning"><Lock className="h-3 w-3" /> Read-only — only RMS Administrators can change settings.</p>}
       </div>
-
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="glass-panel rounded-2xl p-5">
-          <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Workspace</h3></div>
-          <div className="mt-3 space-y-2 text-xs">
-            <Row label="Organization" value="Cortanex Labs" />
-            <Row label="Instance" value="rms.prod.cortanex.io" />
-            <Row label="Region" value="eu-central-1" />
-            <Row label="Time zone" value="Europe/Amsterdam" />
-          </div>
+        <div className="glass-panel space-y-3 rounded-2xl p-5">
+          <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Organization</h3></div>
+          <label className="block text-xs text-muted-foreground">Name<input disabled={!admin} value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} className={field} /></label>
+          <label className="block text-xs text-muted-foreground">Time zone<input disabled={!admin} value={org.timezone} onChange={(e) => setOrg({ ...org, timezone: e.target.value })} className={field} /></label>
+          <label className="block text-xs text-muted-foreground">Recipe code prefix<input disabled={!admin} value={org.codePrefix} onChange={(e) => setOrg({ ...org, codePrefix: e.target.value.toUpperCase() })} className={field} /></label>
+          <label className="block text-xs text-muted-foreground">Default yield unit<input disabled={!admin} value={org.defaultUnit} onChange={(e) => setOrg({ ...org, defaultUnit: e.target.value })} className={field} /></label>
+          <label className="block text-xs text-muted-foreground">Auto sign-out after inactivity (minutes)<input disabled={!admin} type="number" min={5} value={org.sessionTimeoutMin} onChange={(e) => setOrg({ ...org, sessionTimeoutMin: Number(e.target.value) })} className={field} /></label>
+          {admin && <button onClick={() => updateSetting("organization", org).then(() => toast.success("Organization saved"))} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"><Save className="h-3 w-3" /> Save</button>}
         </div>
-        <div className="glass-panel rounded-2xl p-5">
-          <div className="flex items-center gap-2"><Bell className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Notifications</h3></div>
-          <div className="mt-3 space-y-2 text-xs">
-            <Toggle label="Gate transition alerts" defaultOn />
-            <Toggle label="Trial failure notifications" defaultOn />
-            <Toggle label="API key expiring in 7 days" defaultOn />
-            <Toggle label="Weekly R&D digest" />
-          </div>
-        </div>
-        <div className="glass-panel rounded-2xl p-5">
-          <div className="flex items-center gap-2"><Palette className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Appearance</h3></div>
-          <div className="mt-3 space-y-2 text-xs">
-            <Row label="Theme" value="Industrial Dark (fixed)" />
-            <Row label="Density" value="Comfortable" />
-            <Row label="Font" value="Space Grotesk / JetBrains Mono" />
-          </div>
-        </div>
-        <div className="glass-panel rounded-2xl p-5">
-          <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Security posture</h3></div>
-          <div className="mt-3 space-y-2 text-xs">
-            <Row label="MFA required" value="All roles" />
-            <Row label="Session timeout" value="30 min" />
-            <Row label="Audit retention" value="10 years" />
-            <Row label="Dual-signature purge" value="Enforced" />
-          </div>
+        <div className="glass-panel space-y-3 rounded-2xl p-5">
+          <div className="flex items-center gap-2"><Workflow className="h-4 w-4 text-primary" /><h3 className="text-sm font-semibold">Approval workflow</h3></div>
+          <label className="block text-xs text-muted-foreground">QA approvals required before a recipe is Approved
+            <select disabled={!admin} value={wf.qaApprovalsRequired} onChange={(e) => setWf({ ...wf, qaApprovalsRequired: Number(e.target.value) })} className={field}>
+              <option value={1}>1 approver</option><option value={2}>2 approvers</option><option value={3}>3 approvers</option>
+            </select>
+          </label>
+          <label className="block text-xs text-muted-foreground">Review target (days before flagged overdue)<input disabled={!admin} type="number" min={1} value={wf.reviewSlaDays} onChange={(e) => setWf({ ...wf, reviewSlaDays: Number(e.target.value) })} className={field} /></label>
+          <label className="flex items-center gap-2 text-xs"><input disabled={!admin} type="checkbox" checked={wf.requireSignature} onChange={(e) => setWf({ ...wf, requireSignature: e.target.checked })} /> Require electronic signature (password) to approve, reject, release or obsolete</label>
+          {admin && <button onClick={() => updateSetting("workflow", wf).then(() => toast.success("Workflow saved"))} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"><Save className="h-3 w-3" /> Save</button>}
         </div>
       </div>
-
-      <div className="glass-panel overflow-hidden rounded-2xl">
-        <div className="border-b border-border/60 p-5">
-          <h3 className="text-sm font-semibold">REST client error handling matrix</h3>
-          <p className="text-xs text-muted-foreground">Standardized responses for downstream integration failures.</p>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
-              <th className="py-3 pl-4 pr-3 font-medium">HTTP</th>
-              <th className="py-3 pr-3 font-medium">Sub-code</th>
-              <th className="py-3 pr-3 font-medium">Trigger</th>
-              <th className="py-3 pr-4 font-medium">Remediation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ERRORS.map((e) => (
-              <tr key={e.sub} className="border-t border-border/40">
-                <td className="py-3 pl-4 pr-3 font-mono text-destructive">{e.code}</td>
-                <td className="py-3 pr-3 font-mono text-xs text-primary">{e.sub}</td>
-                <td className="py-3 pr-3 text-xs text-muted-foreground">{e.cause}</td>
-                <td className="py-3 pr-4 text-xs">{e.remediation}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-border/30 pb-1.5 last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono">{value}</span>
-    </div>
-  );
-}
-
-function Toggle({ label, defaultOn = false }: { label: string; defaultOn?: boolean }) {
-  return (
-    <label className="flex items-center justify-between rounded-md border border-border/40 bg-card/40 px-3 py-2">
-      <span>{label}</span>
-      <input type="checkbox" defaultChecked={defaultOn} className="h-4 w-4 accent-primary" />
-    </label>
   );
 }

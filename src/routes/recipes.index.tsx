@@ -7,7 +7,7 @@ import { recipeCost, groupedProjects, statusLabel, type RecipeStatus } from "@/l
 import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/")({
-  head: () => ({ meta: [{ title: "Recipes · Cortanex RMS" }, { name: "description", content: "Browse and open recipes across R&D projects." }] }),
+  head: () => ({ meta: [{ title: "Recipes · Cortanex RMS" }, { name: "description", content: "Browse and open recipes across R&D projects." }, { property: "og:title", content: "Recipes · Cortanex RMS" }, { property: "og:description", content: "Browse and open recipes across R&D projects." }] }),
   component: RecipesPage,
 });
 

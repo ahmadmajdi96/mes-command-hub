@@ -117,6 +117,7 @@ export interface AuditEntry {
   after: string;
   reason?: string;
   version?: string;
+  signed?: boolean;
 }
 
 export interface StageGateDef {
@@ -472,6 +473,7 @@ export interface ExecutionRecord {
   status: "dispatched" | "running" | "completed" | "aborted";
   source: "MES" | "Manual"; qcStatus: "pending" | "passed" | "failed";
   actualYield?: number; notes?: string;
+  steps?: { seq: number; phase: string; parameter: string; target: number; actual: number | null; unit: string; deviation?: string; doneAt?: string }[];
 }
 export const executions: ExecutionRecord[] = [
   { id: "EX-3001", recipeId: "REC-0004", recipeCode: "CHOC-GANACHE-V1", version: "v1.0", productionOrder: "PO-26-1182", batch: "B-260701-01", equipment: "Mixer MX-04", line: "Line 2", operator: "R. Ito", startedAt: "2026-07-01 06:10", finishedAt: "2026-07-01 07:02", status: "completed", source: "MES", qcStatus: "passed", actualYield: 24.6 },

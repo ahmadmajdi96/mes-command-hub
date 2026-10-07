@@ -8,7 +8,8 @@ import {
   ShieldAlert, Workflow,
 } from "lucide-react";
 import { useRms } from "@/lib/rms-store";
-import { activityTrend, rmsKpis, recipeCost, statusLabel } from "@/lib/rms-data";
+import { recipeCost, statusLabel } from "@/lib/rms-data";
+import { MyTasks } from "@/components/my-tasks";
 import { StatusPill } from "@/components/status-pill";
 
 export const Route = createFileRoute("/")({
@@ -67,7 +68,19 @@ function Kpi({ label, value, delta, icon: Icon, accent = "primary", suffix }: {
 function Dashboard() {
   const { recipes, materials, trials, audit, apiKeys } = useRms();
   const activeGates = recipes.filter((r) => ["review", "approved"].includes(r.status));
-  const passRate = Math.round((trials.filter((t) => t.outcome === "pass").length / trials.length) * 100);
+  const passRate = trials.length ? Math.round((trials.filter((t) => t.outcome === "pass").length / trials.length) * 100) : 0;
+  const rmsKpis = {
+    totalRecipes: recipes.length || 1,
+    released: recipes.filter((r) => r.status === "released").length,
+    inReview: activeGates.length,
+    failed: recipes.filter((r) => ["rejected", "obsolete", "superseded"].includes(r.status)).length,
+  };
+  const activityTrend = Array.from({ length: 12 }, (_, i) => {
+    const day = new Date(Date.now() - (11 - i) * 86400000).toISOString().slice(0, 10);
+    const ev = audit.filter((a) => a.ts.startsWith(day));
+    return { day: day.slice(5), drafts: ev.filter((a) => ["CREATE", "UPDATE", "NEW_VERSION", "COPY"].includes(a.action) && a.entity.startsWith("REC")).length,
+      trials: ev.filter((a) => a.entity.startsWith("trial:") || a.entity.startsWith("execution:")).length, releases: ev.filter((a) => a.action === "RELEASE").length };
+  });
 
   const gateDist = [
     { name: "Draft", value: recipes.filter((r) => r.status === "draft").length, color: "oklch(0.72 0.14 230)" },
@@ -83,7 +96,7 @@ function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">R&amp;D Control Center</h1>
-          <p className="text-sm text-muted-foreground">Sandbox formulation · trial outcomes · governance signals</p>
+          <p className="text-sm text-muted-foreground">Live view of recipes, approvals, production and governance</p>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/recipes" className="rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs">Open recipes</Link>
@@ -91,13 +104,15 @@ function Dashboard() {
         </div>
       </div>
 
+      <MyTasks />
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
         <Kpi label="Recipes" value={rmsKpis.totalRecipes} icon={FlaskConical} accent="primary" delta={`${rmsKpis.released} released`} />
-        <Kpi label="In pipeline" value={rmsKpis.inReview} icon={Workflow} accent="warning" delta="across 3 gates" />
+        <Kpi label="In pipeline" value={rmsKpis.inReview} icon={Workflow} accent="warning" delta="review + approved" />
         <Kpi label="Materials" value={materials.length} icon={Package} accent="info" />
         <Kpi label="Trials" value={trials.length} icon={Beaker} accent="accent" delta={`${passRate}% pass rate`} />
         <Kpi label="Active API keys" value={apiKeys.filter(k => k.active).length} icon={KeyRound} accent="success" />
-        <Kpi label="Abandoned" value={rmsKpis.failed} icon={ShieldAlert} accent="warning" />
+        <Kpi label="Rejected / retired" value={rmsKpis.failed} icon={ShieldAlert} accent="warning" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

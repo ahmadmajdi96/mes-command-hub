@@ -9,7 +9,7 @@ import { LIFECYCLE } from "@/lib/rms-data";
 import { EntityFormDialog, ConfirmDialog, type FieldSpec } from "@/components/entity-form-dialog";
 
 export const Route = createFileRoute("/recipes/$id")({
-  head: ({ params }) => ({ meta: [{ title: `Recipe ${params.id} · Sandbox Formulator` }, { name: "description", content: "Multi-level formulation sandbox with live property rollup and scaling controls." }] }),
+  head: ({ params }) => ({ meta: [{ title: `Recipe ${params.id} · Cortanex RMS` }, { name: "description", content: "Multi-level formulation sandbox with live property rollup and scaling controls." }, { property: "og:title", content: `Recipe ${params.id} · Cortanex RMS` }, { property: "og:description", content: "Multi-level formulation sandbox with live property rollup and scaling controls." }] }),
   component: RecipeDetail,
 });
 

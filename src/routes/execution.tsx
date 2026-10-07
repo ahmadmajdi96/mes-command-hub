@@ -68,7 +68,7 @@ function ExecutionPage() {
           <tbody>
             {executions.map((e) => (
               <tr key={e.id} className="border-t border-border/40">
-                <td className="py-2.5 pl-4 pr-3 font-mono text-xs text-primary">{e.id}</td>
+                <td className="py-2.5 pl-4 pr-3 font-mono text-xs"><Link to="/run/$id" params={{ id: e.id }} className="text-primary hover:underline">{e.id}</Link></td>
                 <td className="pr-3 text-xs">{e.recipeCode} <span className="font-mono text-muted-foreground">{e.version}</span></td>
                 <td className="pr-3 font-mono text-xs">{e.productionOrder}<div className="text-muted-foreground">{e.batch}</div></td>
                 <td className="pr-3 text-xs">{e.equipment}<div className="text-muted-foreground">{e.line} · {e.source}</div></td>
@@ -79,8 +79,7 @@ function ExecutionPage() {
                 <td className="pr-3">
                   {e.status === "running" && canRecord && (
                     <div className="flex gap-1">
-                      <button onClick={() => setFinish(e.id)} className="rounded p-1 text-success hover:bg-success/10" title="Complete"><CheckCircle2 className="h-4 w-4" /></button>
-                      <button onClick={() => { updateExecution(e.id, { status: "aborted", finishedAt: new Date().toISOString().slice(0, 16).replace("T", " ") }); toast("Execution aborted"); }} className="rounded p-1 text-destructive hover:bg-destructive/10" title="Abort"><Square className="h-4 w-4" /></button>
+                      <Link to="/run/$id" params={{ id: e.id }} className="rounded-md border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] text-primary">Open run</Link>
                     </div>
                   )}
                 </td>
@@ -95,9 +94,11 @@ function ExecutionPage() {
         onSubmit={async (v: any) => {
           const r = recipes.find((x) => x.id === startFor);
           if (!r || r.status !== "released") { toast.error("Only released recipes can be executed"); return; }
-          const ok = await addExecution({ recipeId: r.id, recipeCode: r.code, version: r.version, productionOrder: v.productionOrder, batch: v.batch, equipment: v.equipment, line: v.line, source: v.source, operator: actor, startedAt: new Date().toISOString().slice(0, 16).replace("T", " "), finishedAt: null, status: "running", qcStatus: "pending" });
+          const before = new Set(executions.map((x) => x.id));
+          const ok = await addExecution({ steps: r.process.map((p) => ({ seq: p.seq, phase: p.phase, parameter: p.parameter, target: p.targetValue, actual: null, unit: p.unit })), recipeId: r.id, recipeCode: r.code, version: r.version, productionOrder: v.productionOrder, batch: v.batch, equipment: v.equipment, line: v.line, source: v.source, operator: actor, startedAt: new Date().toISOString().slice(0, 16).replace("T", " "), finishedAt: null, status: "running", qcStatus: "pending" });
           if (ok) toast.success(`Execution started${v.source === "MES" ? " · sent to MES Command Center" : ""}`);
           setStartFor(null);
+          void before;
         }} />
       <EntityFormDialog open={!!finish} onClose={() => setFinish(null)} title="Complete execution" fields={finishFields} submitLabel="Complete"
         onSubmit={(v) => {

@@ -3,7 +3,7 @@ import { Check, X } from "lucide-react";
 import { roleMatrix, ROLES, roleDescriptions } from "@/lib/rms-data";
 
 export const Route = createFileRoute("/roles")({
-  head: () => ({ meta: [{ title: "Role Matrix · Cortanex RMS" }, { name: "description", content: "Workspace functional domain capabilities per role." }] }),
+  head: () => ({ meta: [{ title: "Role Matrix · Cortanex RMS" }, { name: "description", content: "Workspace functional domain capabilities per role." }, { property: "og:title", content: "Role Matrix · Cortanex RMS" }, { property: "og:description", content: "Workspace functional domain capabilities per role." }] }),
   component: RolesPage,
 });
 
