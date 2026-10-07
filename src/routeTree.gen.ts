@@ -9,131 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkflowsRouteImport } from './routes/workflows'
-import { Route as ValidationRouteImport } from './routes/validation'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as UnitsRouteImport } from './routes/units'
-import { Route as TrialsRouteImport } from './routes/trials'
-import { Route as TraceabilityRouteImport } from './routes/traceability'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SchemasRouteImport } from './routes/schemas'
-import { Route as RolesRouteImport } from './routes/roles'
-import { Route as ReviewQueueRouteImport } from './routes/review-queue'
-import { Route as RetentionRouteImport } from './routes/retention'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as MaterialsRouteImport } from './routes/materials'
-import { Route as IntegrationsRouteImport } from './routes/integrations'
-import { Route as ExecutionRouteImport } from './routes/execution'
-import { Route as DataExchangeRouteImport } from './routes/data-exchange'
-import { Route as CompareRouteImport } from './routes/compare'
-import { Route as BranchesRouteImport } from './routes/branches'
-import { Route as AuditRouteImport } from './routes/audit'
-import { Route as ApiKeysRouteImport } from './routes/api-keys'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiKeysRouteImport } from './routes/api-keys'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as BranchesRouteImport } from './routes/branches'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as DataExchangeRouteImport } from './routes/data-exchange'
+import { Route as ExecutionRouteImport } from './routes/execution'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RetentionRouteImport } from './routes/retention'
+import { Route as RolesRouteImport } from './routes/roles'
+import { Route as SchemasRouteImport } from './routes/schemas'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TraceabilityRouteImport } from './routes/traceability'
+import { Route as TrialsRouteImport } from './routes/trials'
+import { Route as UnitsRouteImport } from './routes/units'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as ValidationRouteImport } from './routes/validation'
+import { Route as WorkflowsRouteImport } from './routes/workflows'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
-import { Route as RunIdRouteImport } from './routes/run.$id'
 import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
-import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
-const WorkflowsRoute = WorkflowsRouteImport.update({
-  id: '/workflows',
-  path: '/workflows',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ValidationRoute = ValidationRouteImport.update({
-  id: '/validation',
-  path: '/validation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UnitsRoute = UnitsRouteImport.update({
-  id: '/units',
-  path: '/units',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrialsRoute = TrialsRouteImport.update({
-  id: '/trials',
-  path: '/trials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TraceabilityRoute = TraceabilityRouteImport.update({
-  id: '/traceability',
-  path: '/traceability',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SchemasRoute = SchemasRouteImport.update({
-  id: '/schemas',
-  path: '/schemas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RolesRoute = RolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewQueueRoute = ReviewQueueRouteImport.update({
-  id: '/review-queue',
-  path: '/review-queue',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RetentionRoute = RetentionRouteImport.update({
-  id: '/retention',
-  path: '/retention',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaterialsRoute = MaterialsRouteImport.update({
-  id: '/materials',
-  path: '/materials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrationsRoute = IntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExecutionRoute = ExecutionRouteImport.update({
-  id: '/execution',
-  path: '/execution',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataExchangeRoute = DataExchangeRouteImport.update({
-  id: '/data-exchange',
-  path: '/data-exchange',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareRoute = CompareRouteImport.update({
-  id: '/compare',
-  path: '/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BranchesRoute = BranchesRouteImport.update({
-  id: '/branches',
-  path: '/branches',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuditRoute = AuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiKeysRoute = ApiKeysRouteImport.update({
@@ -141,9 +42,94 @@ const ApiKeysRoute = ApiKeysRouteImport.update({
   path: '/api-keys',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataExchangeRoute = DataExchangeRouteImport.update({
+  id: '/data-exchange',
+  path: '/data-exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutionRoute = ExecutionRouteImport.update({
+  id: '/execution',
+  path: '/execution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetentionRoute = RetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RolesRoute = RolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchemasRoute = SchemasRouteImport.update({
+  id: '/schemas',
+  path: '/schemas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TraceabilityRoute = TraceabilityRouteImport.update({
+  id: '/traceability',
+  path: '/traceability',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialsRoute = TrialsRouteImport.update({
+  id: '/trials',
+  path: '/trials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnitsRoute = UnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidationRoute = ValidationRouteImport.update({
+  id: '/validation',
+  path: '/validation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkflowsRoute = WorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
@@ -151,19 +137,9 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
   path: '/recipes/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RunIdRoute = RunIdRouteImport.update({
-  id: '/run/$id',
-  path: '/run/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RecipesIdRoute = RecipesIdRouteImport.update({
   id: '/recipes/$id',
   path: '/recipes/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
-  id: '/api/public/v1/$',
-  path: '/api/public/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -177,10 +153,8 @@ export interface FileRoutesByFullPath {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
-  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -191,9 +165,7 @@ export interface FileRoutesByFullPath {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
-  '/run/$id': typeof RunIdRoute
   '/recipes/': typeof RecipesIndexRoute
-  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -205,10 +177,8 @@ export interface FileRoutesByTo {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
-  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -219,9 +189,7 @@ export interface FileRoutesByTo {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
-  '/run/$id': typeof RunIdRoute
   '/recipes': typeof RecipesIndexRoute
-  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,10 +202,8 @@ export interface FileRoutesById {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
-  '/review-queue': typeof ReviewQueueRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
   '/settings': typeof SettingsRoute
@@ -248,9 +214,7 @@ export interface FileRoutesById {
   '/validation': typeof ValidationRoute
   '/workflows': typeof WorkflowsRoute
   '/recipes/$id': typeof RecipesIdRoute
-  '/run/$id': typeof RunIdRoute
   '/recipes/': typeof RecipesIndexRoute
-  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -264,10 +228,8 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
-    | '/profile'
     | '/reset-password'
     | '/retention'
-    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -278,9 +240,7 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
-    | '/run/$id'
     | '/recipes/'
-    | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -292,10 +252,8 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
-    | '/profile'
     | '/reset-password'
     | '/retention'
-    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -306,9 +264,7 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
-    | '/run/$id'
     | '/recipes'
-    | '/api/public/v1/$'
   id:
     | '__root__'
     | '/'
@@ -320,10 +276,8 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
-    | '/profile'
     | '/reset-password'
     | '/retention'
-    | '/review-queue'
     | '/roles'
     | '/schemas'
     | '/settings'
@@ -334,9 +288,7 @@ export interface FileRouteTypes {
     | '/validation'
     | '/workflows'
     | '/recipes/$id'
-    | '/run/$id'
     | '/recipes/'
-    | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -349,10 +301,8 @@ export interface RootRouteChildren {
   ExecutionRoute: typeof ExecutionRoute
   IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
-  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RetentionRoute: typeof RetentionRoute
-  ReviewQueueRoute: typeof ReviewQueueRoute
   RolesRoute: typeof RolesRoute
   SchemasRoute: typeof SchemasRoute
   SettingsRoute: typeof SettingsRoute
@@ -363,151 +313,16 @@ export interface RootRouteChildren {
   ValidationRoute: typeof ValidationRoute
   WorkflowsRoute: typeof WorkflowsRoute
   RecipesIdRoute: typeof RecipesIdRoute
-  RunIdRoute: typeof RunIdRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
-  ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/workflows': {
-      id: '/workflows'
-      path: '/workflows'
-      fullPath: '/workflows'
-      preLoaderRoute: typeof WorkflowsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/validation': {
-      id: '/validation'
-      path: '/validation'
-      fullPath: '/validation'
-      preLoaderRoute: typeof ValidationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/units': {
-      id: '/units'
-      path: '/units'
-      fullPath: '/units'
-      preLoaderRoute: typeof UnitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trials': {
-      id: '/trials'
-      path: '/trials'
-      fullPath: '/trials'
-      preLoaderRoute: typeof TrialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/traceability': {
-      id: '/traceability'
-      path: '/traceability'
-      fullPath: '/traceability'
-      preLoaderRoute: typeof TraceabilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/schemas': {
-      id: '/schemas'
-      path: '/schemas'
-      fullPath: '/schemas'
-      preLoaderRoute: typeof SchemasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roles': {
-      id: '/roles'
-      path: '/roles'
-      fullPath: '/roles'
-      preLoaderRoute: typeof RolesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review-queue': {
-      id: '/review-queue'
-      path: '/review-queue'
-      fullPath: '/review-queue'
-      preLoaderRoute: typeof ReviewQueueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/retention': {
-      id: '/retention'
-      path: '/retention'
-      fullPath: '/retention'
-      preLoaderRoute: typeof RetentionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/materials': {
-      id: '/materials'
-      path: '/materials'
-      fullPath: '/materials'
-      preLoaderRoute: typeof MaterialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrations': {
-      id: '/integrations'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof IntegrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/execution': {
-      id: '/execution'
-      path: '/execution'
-      fullPath: '/execution'
-      preLoaderRoute: typeof ExecutionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-exchange': {
-      id: '/data-exchange'
-      path: '/data-exchange'
-      fullPath: '/data-exchange'
-      preLoaderRoute: typeof DataExchangeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare': {
-      id: '/compare'
-      path: '/compare'
-      fullPath: '/compare'
-      preLoaderRoute: typeof CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/branches': {
-      id: '/branches'
-      path: '/branches'
-      fullPath: '/branches'
-      preLoaderRoute: typeof BranchesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/audit': {
-      id: '/audit'
-      path: '/audit'
-      fullPath: '/audit'
-      preLoaderRoute: typeof AuditRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api-keys': {
@@ -517,11 +332,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKeysRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-exchange': {
+      id: '/data-exchange'
+      path: '/data-exchange'
+      fullPath: '/data-exchange'
+      preLoaderRoute: typeof DataExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/execution': {
+      id: '/execution'
+      path: '/execution'
+      fullPath: '/execution'
+      preLoaderRoute: typeof ExecutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retention': {
+      id: '/retention'
+      path: '/retention'
+      fullPath: '/retention'
+      preLoaderRoute: typeof RetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roles': {
+      id: '/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof RolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schemas': {
+      id: '/schemas'
+      path: '/schemas'
+      fullPath: '/schemas'
+      preLoaderRoute: typeof SchemasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/traceability': {
+      id: '/traceability'
+      path: '/traceability'
+      fullPath: '/traceability'
+      preLoaderRoute: typeof TraceabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trials': {
+      id: '/trials'
+      path: '/trials'
+      fullPath: '/trials'
+      preLoaderRoute: typeof TrialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/units': {
+      id: '/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof UnitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validation': {
+      id: '/validation'
+      path: '/validation'
+      fullPath: '/validation'
+      preLoaderRoute: typeof ValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workflows': {
+      id: '/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof WorkflowsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/': {
@@ -531,25 +465,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/run/$id': {
-      id: '/run/$id'
-      path: '/run/$id'
-      fullPath: '/run/$id'
-      preLoaderRoute: typeof RunIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/recipes/$id': {
       id: '/recipes/$id'
       path: '/recipes/$id'
       fullPath: '/recipes/$id'
       preLoaderRoute: typeof RecipesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/$': {
-      id: '/api/public/v1/$'
-      path: '/api/public/v1/$'
-      fullPath: '/api/public/v1/$'
-      preLoaderRoute: typeof ApiPublicV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -565,10 +485,8 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutionRoute: ExecutionRoute,
   IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,
-  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RetentionRoute: RetentionRoute,
-  ReviewQueueRoute: ReviewQueueRoute,
   RolesRoute: RolesRoute,
   SchemasRoute: SchemasRoute,
   SettingsRoute: SettingsRoute,
@@ -579,9 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   ValidationRoute: ValidationRoute,
   WorkflowsRoute: WorkflowsRoute,
   RecipesIdRoute: RecipesIdRoute,
-  RunIdRoute: RunIdRoute,
   RecipesIndexRoute: RecipesIndexRoute,
-  ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
