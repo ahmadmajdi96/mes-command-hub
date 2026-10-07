@@ -101,11 +101,11 @@ export function GlobalSearch() {
 
           <CommandGroup heading="Users">
             {users.map((u) => (
-              <CommandItem key={u.id} value={`${u.name} ${u.email} ${u.role}`}
+              <CommandItem key={u.id} value={`${u.name} ${u.email} ${u.roles.join(" ")}`}
                 onSelect={() => go("/users")}>
                 <UsersIcon className="h-3.5 w-3.5 text-success" />
                 <span className="text-xs">{u.name}</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">{u.role}</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">{u.roles.join(", ")}</span>
               </CommandItem>
             ))}
           </CommandGroup>

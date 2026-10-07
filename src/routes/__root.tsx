@@ -4,7 +4,8 @@ import {
   HeadContent, Scripts, type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Loader2, ShieldAlert } from "lucide-react";
+import { AuthScreen } from "@/components/auth-screen";
 import { GlobalSearch } from "@/components/global-search";
 
 import appCss from "../styles.css?url";
@@ -97,42 +98,66 @@ const roleInitials: Record<Role, string> = {
 };
 
 function TopBar() {
-  const { role, setRole, actor } = useRms();
+  const { role, roles, setRole, actor, signOut, audit } = useRms();
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
       <div className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-        <span>Cortanex Labs</span>
+        <span>Cortanex</span>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground">R&amp;D Sandbox</span>
-        <ChevronRight className="h-3 w-3" />
-        <span>Active project · Helios</span>
+        <span className="text-foreground">Recipe Management</span>
       </div>
       <div className="ml-auto flex items-center gap-2">
         <GlobalSearch />
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Role)}
-          className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs text-foreground focus:border-primary/50 focus:outline-none"
-          aria-label="Simulated role"
-        >
-          {ROLES.map((r) => <option key={r}>{r}</option>)}
-        </select>
-        <button className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground transition hover:text-foreground">
+        {roles.length > 1 && (
+          <select value={role ?? ""} onChange={(e) => setRole(e.target.value as Role)} aria-label="Active role"
+            className="h-9 rounded-lg border border-border/60 bg-card/60 px-2 text-xs text-foreground focus:border-primary/50 focus:outline-none">
+            {roles.map((r) => <option key={r}>{r}</option>)}
+          </select>
+        )}
+        <Link to="/audit" className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground transition hover:text-foreground" title="Recent activity">
           <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
-        </button>
+          {audit.length > 0 && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+        </Link>
         <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-2 py-1">
           <div className="grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br from-primary to-info text-[10px] font-bold text-primary-foreground">
-            {roleInitials[role]}
+            {role ? roleInitials[role] : "—"}
           </div>
           <div className="hidden text-xs leading-tight sm:block">
             <div className="font-medium">{actor}</div>
-            <div className="text-[10px] text-muted-foreground">{role}</div>
+            <div className="text-[10px] text-muted-foreground">{role ?? "No role assigned"}</div>
           </div>
         </div>
+        <button onClick={signOut} title="Sign out" className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground hover:text-destructive">
+          <LogOut className="h-4 w-4" />
+        </button>
       </div>
     </header>
+  );
+}
+
+function Gate({ children }: { children: ReactNode }) {
+  const { session, ready, roles } = useRms();
+  if (!ready) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (!session) return <AuthScreen />;
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar />
+          <main className="flex-1 p-4 sm:p-6">
+            {roles.length === 0 ? (
+              <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-6 text-center">
+                <ShieldAlert className="mx-auto h-8 w-8 text-warning" />
+                <h1 className="mt-3 font-display text-lg font-semibold">Waiting for access</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Your account is active, but an RMS Administrator still needs to assign you a role.</p>
+              </div>
+            ) : children}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
 
@@ -141,17 +166,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RmsStoreProvider>
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full">
-            <AppSidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <TopBar />
-              <main className="flex-1 p-4 sm:p-6">
-                <Outlet />
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
+        <Gate><Outlet /></Gate>
         <Toaster theme="dark" position="bottom-right" richColors />
       </RmsStoreProvider>
     </QueryClientProvider>

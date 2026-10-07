@@ -14,16 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string
+          after_value: string
+          before_value: string
+          entity: string
+          id: number
+          property: string
+          reason: string | null
+          ts: string
+          version: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string
+          after_value?: string
+          before_value?: string
+          entity: string
+          id?: number
+          property?: string
+          reason?: string | null
+          ts?: string
+          version?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          after_value?: string
+          before_value?: string
+          entity?: string
+          id?: number
+          property?: string
+          reason?: string | null
+          ts?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      recipes: {
+        Row: {
+          approved_by: string[]
+          branch_label: string | null
+          classification: string
+          code: string
+          compliance: Json
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          items: Json
+          name: string
+          parent_id: string | null
+          process: Json
+          project: string
+          status: string
+          target_yield: Json
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          approved_by?: string[]
+          branch_label?: string | null
+          classification?: string
+          code: string
+          compliance?: Json
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          items?: Json
+          name: string
+          parent_id?: string | null
+          process?: Json
+          project?: string
+          status?: string
+          target_yield?: Json
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          approved_by?: string[]
+          branch_label?: string | null
+          classification?: string
+          code?: string
+          compliance?: Json
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          items?: Json
+          name?: string
+          parent_id?: string | null
+          process?: Json
+          project?: string
+          status?: string
+          target_yield?: Json
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      rms_records: {
+        Row: {
+          created_by: string | null
+          data: Json
+          id: string
+          kind: string
+          updated_at: string
+        }
+        Insert: {
+          created_by?: string | null
+          data?: Json
+          id: string
+          kind: string
+          updated_at?: string
+        }
+        Update: {
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_write_record: { Args: { _kind: string }; Returns: boolean }
+      current_actor_name: { Args: never; Returns: string }
+      ensure_profile: { Args: { _full_name?: string }; Returns: undefined }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      log_event: {
+        Args: {
+          _action: string
+          _after: string
+          _entity: string
+          _property: string
+          _version?: string
+        }
+        Returns: undefined
+      }
+      new_recipe_version: {
+        Args: { _copy?: boolean; _id: string }
+        Returns: string
+      }
+      transition_recipe: {
+        Args: { _action: string; _id: string; _reason?: string }
+        Returns: string
+      }
+      write_audit: {
+        Args: {
+          _action: string
+          _after: string
+          _before: string
+          _entity: string
+          _property: string
+          _reason: string
+          _version: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "recipe_engineer"
+        | "qa_manager"
+        | "production_manager"
+        | "operator"
+        | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +374,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "recipe_engineer",
+        "qa_manager",
+        "production_manager",
+        "operator",
+        "admin",
+      ],
+    },
   },
 } as const

@@ -1,86 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import * as data from "./rms-data";
-
-type Store = {
-  role: data.Role;
-  setRole: (r: data.Role) => void;
-
-  materials: data.Material[];
-  recipes: data.Recipe[];
-  trials: data.Trial[];
-  apiKeys: data.ApiKey[];
-  schemas: data.AttributeSchema[];
-  units: data.UnitDef[];
-  users: data.UserAccount[];
-  audit: data.AuditEntry[];
-  actor: string;
-  can: (p: data.Permission) => boolean;
-  rules: data.ValidationRule[];
-  executions: data.ExecutionRecord[];
-  integrations: data.IntegrationEndpoint[];
-  logAudit: (e: Omit<data.AuditEntry, "id" | "ts" | "user">) => void;
-  transition: (recipeId: string, action: WorkflowAction, reason: string) => { ok: boolean; error?: string };
-  newVersion: (recipeId: string, reason: string) => string | null;
-  copyRecipe: (recipeId: string) => string | null;
-  addRule: (r: Omit<data.ValidationRule, "id">) => void;
-  updateRule: (id: string, patch: Partial<data.ValidationRule>) => void;
-  deleteRule: (id: string) => void;
-  addExecution: (e: Omit<data.ExecutionRecord, "id">) => void;
-  updateExecution: (id: string, patch: Partial<data.ExecutionRecord>) => void;
-  updateIntegration: (id: string, patch: Partial<data.IntegrationEndpoint>) => void;
-  importRecipes: (rs: data.Recipe[]) => number;
-
-  // Materials
-  addMaterial: (m: Omit<data.Material, "id" | "updatedAt">) => void;
-  updateMaterial: (id: string, patch: Partial<data.Material>) => void;
-  deleteMaterial: (id: string) => void;
-
-  // Recipes
-  addRecipe: (r: Omit<data.Recipe, "id" | "updatedAt" | "items" | "process" | "approvedBy"> & { items?: data.RecipeItem[]; process?: data.ProcessStep[] }) => void;
-  updateRecipe: (id: string, patch: Partial<data.Recipe>) => void;
-  deleteRecipe: (id: string) => void;
-
-  // Recipe items
-  addRecipeItem: (recipeId: string, it: Omit<data.RecipeItem, "id">) => void;
-  updateRecipeItem: (recipeId: string, itemId: string, patch: Partial<data.RecipeItem>) => void;
-  removeRecipeItem: (recipeId: string, itemId: string) => void;
-
-  // Process steps
-  addProcessStep: (recipeId: string, p: Omit<data.ProcessStep, "seq">) => void;
-  updateProcessStep: (recipeId: string, seq: number, patch: Partial<data.ProcessStep>) => void;
-  removeProcessStep: (recipeId: string, seq: number) => void;
-
-  // Trials
-  addTrial: (t: Omit<data.Trial, "id" | "loggedAt">) => void;
-  updateTrial: (id: string, patch: Partial<data.Trial>) => void;
-  deleteTrial: (id: string) => void;
-
-  // API keys
-  addApiKey: (k: Omit<data.ApiKey, "id" | "createdAt" | "lastUsed" | "active" | "callsToday" | "tokenPreview">) => void;
-  revokeKey: (id: string) => void;
-  deleteApiKey: (id: string) => void;
-
-  // Schemas
-  addSchema: (s: Omit<data.AttributeSchema, "id" | "fields">) => void;
-  updateSchema: (id: string, patch: Partial<data.AttributeSchema>) => void;
-  deleteSchema: (id: string) => void;
-  addSchemaField: (schemaId: string, f: data.AttributeSchema["fields"][number]) => void;
-  updateSchemaField: (schemaId: string, key: string, patch: Partial<data.AttributeSchema["fields"][number]>) => void;
-  removeSchemaField: (schemaId: string, key: string) => void;
-
-  // Units
-  addUnit: (u: Omit<data.UnitDef, "id">) => void;
-  updateUnit: (id: string, patch: Partial<data.UnitDef>) => void;
-  deleteUnit: (id: string) => void;
-
-  // Users
-  addUser: (u: Omit<data.UserAccount, "id" | "lastActive">) => void;
-  updateUser: (id: string, patch: Partial<data.UserAccount>) => void;
-  deleteUser: (id: string) => void;
-
-  // Workflow
-  moveGate: (recipeId: string, next: data.RecipeStatus) => void;
-};
 
 export type WorkflowAction = "submit" | "approve" | "reject" | "return" | "release" | "obsolete";
 export const ACTION_META: Record<WorkflowAction, { label: string; from: data.RecipeStatus[]; to: data.RecipeStatus; perm: data.Permission }> = {
@@ -92,153 +14,349 @@ export const ACTION_META: Record<WorkflowAction, { label: string; from: data.Rec
   obsolete: { label: "Mark obsolete", from: ["released", "approved", "superseded"], to: "obsolete", perm: "recipe.obsolete" },
 };
 
+type DbRole = "recipe_engineer" | "qa_manager" | "production_manager" | "operator" | "admin";
+export const ROLE_TO_DB: Record<data.Role, DbRole> = {
+  "Recipe Engineer": "recipe_engineer",
+  "QA / Quality Manager": "qa_manager",
+  "Production Manager": "production_manager",
+  "Operator": "operator",
+  "RMS Administrator": "admin",
+};
+const DB_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_DB).map(([k, v]) => [v, k])) as Record<DbRole, data.Role>;
+
+export interface AppUser { id: string; name: string; email: string; status: string; roles: data.Role[] }
+
+type Kind = "material" | "unit" | "schema" | "trial" | "api_key" | "validation_rule" | "execution" | "integration";
+
+type Store = {
+  session: Session | null;
+  ready: boolean;
+  userId: string | null;
+  roles: data.Role[];
+  role: data.Role | null;
+  setRole: (r: data.Role) => void;
+  actor: string;
+  can: (p: data.Permission) => boolean;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
+
+  materials: data.Material[];
+  recipes: data.Recipe[];
+  trials: data.Trial[];
+  apiKeys: data.ApiKey[];
+  schemas: data.AttributeSchema[];
+  units: data.UnitDef[];
+  users: AppUser[];
+  audit: data.AuditEntry[];
+  rules: data.ValidationRule[];
+  executions: data.ExecutionRecord[];
+  integrations: data.IntegrationEndpoint[];
+
+  logAudit: (e: Omit<data.AuditEntry, "id" | "ts" | "user">) => void;
+  transition: (recipeId: string, action: WorkflowAction, reason: string) => Promise<{ ok: boolean; error?: string }>;
+  newVersion: (recipeId: string, reason: string) => Promise<string | null>;
+  copyRecipe: (recipeId: string) => Promise<string | null>;
+
+  addMaterial: (m: Omit<data.Material, "id" | "updatedAt">) => void;
+  updateMaterial: (id: string, patch: Partial<data.Material>) => void;
+  deleteMaterial: (id: string) => void;
+
+  addRecipe: (r: Omit<data.Recipe, "id" | "updatedAt" | "items" | "process" | "approvedBy"> & { items?: data.RecipeItem[]; process?: data.ProcessStep[] }) => void;
+  updateRecipe: (id: string, patch: Partial<data.Recipe>) => void;
+  deleteRecipe: (id: string) => void;
+  addRecipeItem: (recipeId: string, it: Omit<data.RecipeItem, "id">) => void;
+  updateRecipeItem: (recipeId: string, itemId: string, patch: Partial<data.RecipeItem>) => void;
+  removeRecipeItem: (recipeId: string, itemId: string) => void;
+  addProcessStep: (recipeId: string, p: Omit<data.ProcessStep, "seq">) => void;
+  updateProcessStep: (recipeId: string, seq: number, patch: Partial<data.ProcessStep>) => void;
+  removeProcessStep: (recipeId: string, seq: number) => void;
+
+  addTrial: (t: Omit<data.Trial, "id" | "loggedAt">) => void;
+  updateTrial: (id: string, patch: Partial<data.Trial>) => void;
+  deleteTrial: (id: string) => void;
+
+  addApiKey: (k: Omit<data.ApiKey, "id" | "createdAt" | "lastUsed" | "active" | "callsToday" | "tokenPreview">) => void;
+  revokeKey: (id: string) => void;
+  deleteApiKey: (id: string) => void;
+
+  addSchema: (s: Omit<data.AttributeSchema, "id" | "fields">) => void;
+  updateSchema: (id: string, patch: Partial<data.AttributeSchema>) => void;
+  deleteSchema: (id: string) => void;
+  addSchemaField: (schemaId: string, f: data.AttributeSchema["fields"][number]) => void;
+  updateSchemaField: (schemaId: string, key: string, patch: Partial<data.AttributeSchema["fields"][number]>) => void;
+  removeSchemaField: (schemaId: string, key: string) => void;
+
+  addUnit: (u: Omit<data.UnitDef, "id">) => void;
+  updateUnit: (id: string, patch: Partial<data.UnitDef>) => void;
+  deleteUnit: (id: string) => void;
+
+  setUserRole: (userId: string, role: data.Role, on: boolean) => Promise<void>;
+  updateUser: (id: string, patch: { name?: string; status?: string }) => Promise<void>;
+
+  addRule: (r: Omit<data.ValidationRule, "id">) => void;
+  updateRule: (id: string, patch: Partial<data.ValidationRule>) => void;
+  deleteRule: (id: string) => void;
+  addExecution: (e: Omit<data.ExecutionRecord, "id">) => Promise<boolean>;
+  updateExecution: (id: string, patch: Partial<data.ExecutionRecord>) => void;
+  updateIntegration: (id: string, patch: Partial<data.IntegrationEndpoint>) => void;
+  importRecipes: (rs: data.Recipe[]) => Promise<number>;
+};
+
 const Ctx = createContext<Store | null>(null);
 
 const nowStamp = () => new Date().toISOString().slice(0, 10);
 const nowStampFull = () => new Date().toISOString().slice(0, 16).replace("T", " ");
 const rid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
-export function RmsStoreProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<data.Role>("Recipe Engineer");
-  const [materials, setMaterials] = useState<data.Material[]>(data.materials);
-  const [recipes, setRecipes] = useState<data.Recipe[]>(data.recipes);
-  const [trials, setTrials] = useState<data.Trial[]>(data.trials);
-  const [apiKeys, setApiKeys] = useState<data.ApiKey[]>(data.apiKeys);
-  const [schemas, setSchemas] = useState<data.AttributeSchema[]>(data.schemas);
-  const [units, setUnits] = useState<data.UnitDef[]>(data.units);
-  const [users, setUsers] = useState<data.UserAccount[]>(data.users);
-  const [audit, setAudit] = useState<data.AuditEntry[]>(data.auditTrail);
-  const [rules, setRules] = useState<data.ValidationRule[]>(data.validationRules);
-  const [executions, setExecutions] = useState<data.ExecutionRecord[]>(data.executions);
-  const [integrations, setIntegrations] = useState<data.IntegrationEndpoint[]>(data.integrations);
-  const actor = data.roleActor[role];
+type RecipeRow = {
+  id: string; code: string; name: string; project: string; version: string; parent_id: string | null; branch_label: string | null;
+  status: string; classification: string; target_yield: unknown; items: unknown; process: unknown; compliance: unknown;
+  created_by_name: string; approved_by: string[]; updated_at: string;
+};
+const fromRow = (r: RecipeRow): data.Recipe => ({
+  id: r.id, code: r.code, name: r.name, project: r.project, version: r.version,
+  parentId: r.parent_id ?? undefined, branchLabel: r.branch_label ?? undefined,
+  status: r.status as data.RecipeStatus, classification: r.classification,
+  targetYield: r.target_yield as data.Recipe["targetYield"], items: (r.items ?? []) as data.RecipeItem[],
+  process: (r.process ?? []) as data.ProcessStep[], compliance: r.compliance as data.Recipe["compliance"],
+  createdBy: r.created_by_name, approvedBy: r.approved_by ?? [], updatedAt: r.updated_at.slice(0, 10),
+});
 
-  const logAudit = (e: Omit<data.AuditEntry, "id" | "ts" | "user">) =>
-    setAudit((prev) => [{ ...e, id: rid("a"), ts: new Date().toISOString().slice(0, 19).replace("T", " "), user: actor }, ...prev]);
+const errMsg = (e: unknown) => (e && typeof e === "object" && "message" in e ? String((e as { message: string }).message) : "Something went wrong");
+
+export function RmsStoreProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+  const [roles, setRoles] = useState<data.Role[]>([]);
+  const [role, setRole] = useState<data.Role | null>(null);
+  const [actor, setActor] = useState("");
+  const [recipes, setRecipes] = useState<data.Recipe[]>([]);
+  const [records, setRecords] = useState<Record<Kind, unknown[]>>({ material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [] });
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [audit, setAudit] = useState<data.AuditEntry[]>([]);
+  const userId = session?.user.id ?? null;
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); if (!s) setReady(true); });
+    supabase.auth.getSession().then(({ data: d }) => { setSession(d.session); if (!d.session) setReady(true); });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const loadRecipes = useCallback(async () => {
+    const { data: rows, error } = await supabase.from("recipes").select("*").order("updated_at", { ascending: false });
+    if (error) throw error;
+    setRecipes((rows as RecipeRow[]).map(fromRow));
+  }, []);
+  const loadRecords = useCallback(async () => {
+    const { data: rows, error } = await supabase.from("rms_records").select("kind, data").order("updated_at", { ascending: false });
+    if (error) throw error;
+    const next: Record<Kind, unknown[]> = { material: [], unit: [], schema: [], trial: [], api_key: [], validation_rule: [], execution: [], integration: [] };
+    (rows ?? []).forEach((r) => next[r.kind as Kind]?.push(r.data));
+    next.unit.reverse(); next.schema.reverse(); next.validation_rule.sort((a, b) => String((a as { id: string }).id).localeCompare(String((b as { id: string }).id)));
+    setRecords(next);
+  }, []);
+  const loadAudit = useCallback(async () => {
+    const { data: rows } = await supabase.from("audit_log").select("*").order("ts", { ascending: false }).limit(500);
+    setAudit((rows ?? []).map((a) => ({
+      id: String(a.id), ts: a.ts.slice(0, 19).replace("T", " "), user: a.actor_name, action: a.action, entity: a.entity,
+      property: a.property, before: a.before_value, after: a.after_value, reason: a.reason ?? undefined, version: a.version ?? undefined,
+    })));
+  }, []);
+  const loadUsers = useCallback(async () => {
+    const [{ data: profs }, { data: rs }] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at"),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    setUsers((profs ?? []).map((p) => ({
+      id: p.id, name: p.full_name, email: p.email, status: p.status,
+      roles: (rs ?? []).filter((r) => r.user_id === p.id).map((r) => DB_TO_ROLE[r.role as DbRole]),
+    })));
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try { await Promise.all([loadRecipes(), loadRecords(), loadAudit(), loadUsers()]); }
+    catch (e) { toast.error(errMsg(e)); }
+  }, [loadRecipes, loadRecords, loadAudit, loadUsers]);
+
+  useEffect(() => {
+    if (!userId) { setRoles([]); setRole(null); return; }
+    let cancelled = false;
+    (async () => {
+      const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
+      await supabase.rpc("ensure_profile", { _full_name: meta?.full_name ?? meta?.name ?? "" });
+      const [{ data: myRoles }, { data: prof }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const held = (myRoles ?? []).map((r) => DB_TO_ROLE[r.role as DbRole]).filter(Boolean);
+      setRoles(held);
+      setRole((cur) => (cur && held.includes(cur) ? cur : held[0] ?? null));
+      setActor(prof?.full_name || prof?.email || session?.user.email || "");
+      await refresh();
+      if (!cancelled) setReady(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  const can = useCallback((p: data.Permission) => roles.some((r) => data.can(r, p)), [roles]);
+
+  // ---- generic record helpers ----
+  const upsert = useCallback(async (kind: Kind, obj: { id: string; [k: string]: unknown }) => {
+    const { error } = await supabase.from("rms_records").upsert({ kind, id: obj.id, data: obj as never, created_by: userId });
+    if (error) toast.error(errMsg(error));
+    await Promise.all([loadRecords(), loadAudit()]);
+    return !error;
+  }, [userId, loadRecords, loadAudit]);
+  const remove = useCallback(async (kind: Kind, id: string) => {
+    const { error } = await supabase.from("rms_records").delete().eq("kind", kind).eq("id", id);
+    if (error) toast.error(errMsg(error));
+    await Promise.all([loadRecords(), loadAudit()]);
+  }, [loadRecords, loadAudit]);
+  const find = <T,>(kind: Kind, id: string) => (records[kind] as (T & { id: string })[]).find((x) => x.id === id);
+
+  const patchRecipe = useCallback(async (id: string, fn: (r: data.Recipe) => Partial<data.Recipe>) => {
+    const r = recipes.find((x) => x.id === id);
+    if (!r) return;
+    const p = fn(r);
+    const row: Record<string, unknown> = {};
+    if (p.name !== undefined) row.name = p.name;
+    if (p.code !== undefined) row.code = p.code;
+    if (p.version !== undefined) row.version = p.version;
+    if (p.project !== undefined) row.project = p.project;
+    if (p.branchLabel !== undefined) row.branch_label = p.branchLabel;
+    if (p.classification !== undefined) row.classification = p.classification;
+    if (p.targetYield !== undefined) row.target_yield = p.targetYield;
+    if (p.items !== undefined) row.items = p.items;
+    if (p.process !== undefined) row.process = p.process;
+    if (p.compliance !== undefined) row.compliance = p.compliance;
+    setRecipes((prev) => prev.map((x) => (x.id === id ? { ...x, ...p } : x)));
+    const { error } = await supabase.from("recipes").update(row as never).eq("id", id);
+    if (error) { toast.error(errMsg(error)); await loadRecipes(); }
+    else loadAudit();
+  }, [recipes, loadRecipes, loadAudit]);
 
   const value = useMemo<Store>(() => ({
-    role, setRole,
-    materials, recipes, trials, apiKeys, schemas, units, users, audit,
-    actor, can: (p) => data.can(role, p), rules, executions, integrations, logAudit,
-    transition: (recipeId, action, reason) => {
-      const r = recipes.find((x) => x.id === recipeId);
-      const meta = ACTION_META[action];
-      if (!r) return { ok: false, error: "Recipe not found" };
-      if (!data.can(role, meta.perm)) return { ok: false, error: `Role "${role}" is not permitted to ${action}` };
-      if (!meta.from.includes(r.status)) return { ok: false, error: `Cannot ${action} from ${data.statusLabel(r.status)}` };
-      if ((action === "approve" || action === "release") && r.createdBy === actor) return { ok: false, error: "Segregation of duties: authors cannot approve or release their own recipe" };
-      if (["reject", "return", "obsolete"].includes(action) && !reason.trim()) return { ok: false, error: "A reason is required" };
-      if (action === "submit" || action === "approve" || action === "release") {
-        const errs = data.validateRecipe(r, rules, materials, recipes).filter((i) => i.severity === "error");
-        if (errs.length) return { ok: false, error: `Validation failed: ${errs[0].message}${errs.length > 1 ? ` (+${errs.length - 1} more)` : ""}` };
+    session, ready, userId, roles, role, setRole, actor, can,
+    signOut: async () => { await supabase.auth.signOut(); setRecipes([]); setUsers([]); setAudit([]); },
+    refresh,
+    materials: records.material as data.Material[],
+    recipes,
+    trials: records.trial as data.Trial[],
+    apiKeys: records.api_key as data.ApiKey[],
+    schemas: records.schema as data.AttributeSchema[],
+    units: records.unit as data.UnitDef[],
+    users, audit,
+    rules: records.validation_rule as data.ValidationRule[],
+    executions: records.execution as data.ExecutionRecord[],
+    integrations: records.integration as data.IntegrationEndpoint[],
+
+    logAudit: (e) => {
+      if (["DOWNLOAD", "EXPORT", "IMPORT", "SYNC"].includes(e.action)) {
+        supabase.rpc("log_event", { _action: e.action, _entity: e.entity, _property: e.property, _after: e.after, _version: e.version ?? undefined }).then(() => loadAudit());
       }
-      setRecipes((prev) => prev.map((x) => {
-        if (x.id === recipeId) return { ...x, status: meta.to, updatedAt: nowStamp(), approvedBy: action === "approve" ? [...x.approvedBy, actor] : x.approvedBy };
-        // releasing a version supersedes the previously released version of the same code family
-        if (action === "release" && x.status === "released" && x.code === r.code) return { ...x, status: "superseded" };
-        return x;
-      }));
-      logAudit({ action: action.toUpperCase(), entity: recipeId, property: "status", before: r.status, after: meta.to, reason: reason || undefined, version: r.version });
-      return { ok: true };
     },
-    newVersion: (recipeId, reason) => {
-      const r = recipes.find((x) => x.id === recipeId);
-      if (!r || !data.can(role, "recipe.version")) return null;
-      const id = rid("REC");
-      const m = r.version.match(/^v(\d+)\.(\d+)/);
-      const version = m ? `v${m[1]}.${Number(m[2]) + 1}` : `${r.version}.1`;
-      setRecipes((prev) => [{ ...structuredClone(r), id, version, status: "draft", approvedBy: [], createdBy: actor, updatedAt: nowStamp() }, ...prev]);
-      logAudit({ action: "NEW_VERSION", entity: id, property: "version", before: r.version, after: version, reason, version });
-      return id;
+    transition: async (recipeId, action, reason) => {
+      const { error } = await supabase.rpc("transition_recipe", { _id: recipeId, _action: action, _reason: reason });
+      await Promise.all([loadRecipes(), loadAudit()]);
+      return error ? { ok: false, error: errMsg(error) } : { ok: true };
     },
-    copyRecipe: (recipeId) => {
-      const r = recipes.find((x) => x.id === recipeId);
-      if (!r || !data.can(role, "recipe.copy")) return null;
-      const id = rid("REC");
-      setRecipes((prev) => [{ ...structuredClone(r), id, code: `${r.code}-COPY`, name: `${r.name} (copy)`, version: "v1.0", parentId: undefined, status: "draft", approvedBy: [], createdBy: actor, updatedAt: nowStamp() }, ...prev]);
-      logAudit({ action: "COPY", entity: id, property: "source", before: "—", after: recipeId });
-      return id;
+    newVersion: async (recipeId) => {
+      const { data: id, error } = await supabase.rpc("new_recipe_version", { _id: recipeId, _copy: false });
+      if (error) { toast.error(errMsg(error)); return null; }
+      await Promise.all([loadRecipes(), loadAudit()]);
+      return id as string;
     },
-    addRule: (r) => { setRules((p) => [...p, { ...r, id: rid("VR") }]); logAudit({ action: "CREATE", entity: "validation_rule", property: "name", before: "—", after: r.name }); },
-    updateRule: (id, patch) => setRules((p) => p.map((r) => r.id === id ? { ...r, ...patch } : r)),
-    deleteRule: (id) => setRules((p) => p.filter((r) => r.id !== id)),
-    addExecution: (e) => { const id = rid("EX"); setExecutions((p) => [{ ...e, id }, ...p]); logAudit({ action: "EXECUTE", entity: e.recipeId, property: "batch", before: "—", after: `${e.batch} / ${e.productionOrder}`, version: e.version }); },
-    updateExecution: (id, patch) => setExecutions((p) => p.map((x) => x.id === id ? { ...x, ...patch } : x)),
-    updateIntegration: (id, patch) => setIntegrations((p) => p.map((x) => x.id === id ? { ...x, ...patch } : x)),
-    importRecipes: (rs) => {
-      setRecipes((prev) => [...rs.map((r) => ({ ...r, id: rid("REC"), status: "draft" as const, approvedBy: [], createdBy: actor, updatedAt: nowStamp() })), ...prev]);
-      logAudit({ action: "IMPORT", entity: "recipes", property: "count", before: "0", after: String(rs.length) });
+    copyRecipe: async (recipeId) => {
+      const { data: id, error } = await supabase.rpc("new_recipe_version", { _id: recipeId, _copy: true });
+      if (error) { toast.error(errMsg(error)); return null; }
+      await Promise.all([loadRecipes(), loadAudit()]);
+      return id as string;
+    },
+
+    addMaterial: (m) => { upsert("material", { ...m, id: rid("MAT"), updatedAt: nowStamp() }); },
+    updateMaterial: (id, patch) => { const x = find<data.Material>("material", id); if (x) upsert("material", { ...x, ...patch, updatedAt: nowStamp() }); },
+    deleteMaterial: (id) => { remove("material", id); },
+
+    addRecipe: async (r) => {
+      const { error } = await supabase.from("recipes").insert({
+        code: r.code, name: r.name, project: r.project, version: r.version, parent_id: r.parentId ?? null, branch_label: r.branchLabel ?? null,
+        status: "draft", classification: r.classification, target_yield: r.targetYield as never, items: (r.items ?? []) as never,
+        process: (r.process ?? []) as never, compliance: r.compliance as never, created_by: userId,
+      });
+      if (error) toast.error(errMsg(error));
+      await Promise.all([loadRecipes(), loadAudit()]);
+    },
+    updateRecipe: (id, patch) => { patchRecipe(id, () => patch); },
+    deleteRecipe: async (id) => {
+      const { error } = await supabase.from("recipes").delete().eq("id", id);
+      if (error) toast.error(errMsg(error));
+      await Promise.all([loadRecipes(), loadAudit()]);
+    },
+    addRecipeItem: (recipeId, it) => { patchRecipe(recipeId, (r) => ({ items: [...r.items, { ...it, id: `it_${Date.now().toString(36)}` }] })); },
+    updateRecipeItem: (recipeId, itemId, patch) => { patchRecipe(recipeId, (r) => ({ items: r.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)) })); },
+    removeRecipeItem: (recipeId, itemId) => { patchRecipe(recipeId, (r) => ({ items: r.items.filter((it) => it.id !== itemId) })); },
+    addProcessStep: (recipeId, p) => { patchRecipe(recipeId, (r) => ({ process: [...r.process, { ...p, seq: (r.process.at(-1)?.seq ?? 0) + 1 }] })); },
+    updateProcessStep: (recipeId, seq, patch) => { patchRecipe(recipeId, (r) => ({ process: r.process.map((p) => (p.seq === seq ? { ...p, ...patch } : p)) })); },
+    removeProcessStep: (recipeId, seq) => { patchRecipe(recipeId, (r) => ({ process: r.process.filter((p) => p.seq !== seq).map((p, i) => ({ ...p, seq: i + 1 })) })); },
+
+    addTrial: (t) => { upsert("trial", { ...t, id: rid("TR"), loggedAt: nowStampFull() }); },
+    updateTrial: (id, patch) => { const x = find<data.Trial>("trial", id); if (x) upsert("trial", { ...x, ...patch }); },
+    deleteTrial: (id) => { remove("trial", id); },
+
+    addApiKey: (k) => {
+      upsert("api_key", { ...k, id: rid("KEY"), createdAt: nowStamp(), lastUsed: null, active: true, callsToday: 0,
+        tokenPreview: `rms_live_${Math.random().toString(36).slice(2, 10)}…${Math.random().toString(36).slice(2, 6)}` });
+    },
+    revokeKey: (id) => { const x = find<data.ApiKey>("api_key", id); if (x) upsert("api_key", { ...x, active: false }); },
+    deleteApiKey: (id) => { remove("api_key", id); },
+
+    addSchema: (s) => { upsert("schema", { ...s, id: rid("sch"), fields: [] }); },
+    updateSchema: (id, patch) => { const x = find<data.AttributeSchema>("schema", id); if (x) upsert("schema", { ...x, ...patch }); },
+    deleteSchema: (id) => { remove("schema", id); },
+    addSchemaField: (schemaId, f) => { const x = find<data.AttributeSchema>("schema", schemaId); if (x) upsert("schema", { ...x, fields: [...x.fields, f] }); },
+    updateSchemaField: (schemaId, key, patch) => { const x = find<data.AttributeSchema>("schema", schemaId); if (x) upsert("schema", { ...x, fields: x.fields.map((f) => (f.key === key ? { ...f, ...patch } : f)) }); },
+    removeSchemaField: (schemaId, key) => { const x = find<data.AttributeSchema>("schema", schemaId); if (x) upsert("schema", { ...x, fields: x.fields.filter((f) => f.key !== key) }); },
+
+    addUnit: (u) => { upsert("unit", { ...u, id: rid("u") }); },
+    updateUnit: (id, patch) => { const x = find<data.UnitDef>("unit", id); if (x) upsert("unit", { ...x, ...patch }); },
+    deleteUnit: (id) => { remove("unit", id); },
+
+    setUserRole: async (uid, r, on) => {
+      const dbRole = ROLE_TO_DB[r];
+      const { error } = on
+        ? await supabase.from("user_roles").insert({ user_id: uid, role: dbRole })
+        : await supabase.from("user_roles").delete().eq("user_id", uid).eq("role", dbRole);
+      if (error) toast.error(errMsg(error));
+      await Promise.all([loadUsers(), loadAudit()]);
+    },
+    updateUser: async (id, patch) => {
+      const { error } = await supabase.from("profiles").update({ ...(patch.name !== undefined ? { full_name: patch.name } : {}), ...(patch.status ? { status: patch.status } : {}) }).eq("id", id);
+      if (error) toast.error(errMsg(error));
+      await loadUsers();
+    },
+
+    addRule: (r) => { upsert("validation_rule", { ...r, id: rid("VR") }); },
+    updateRule: (id, patch) => { const x = find<data.ValidationRule>("validation_rule", id); if (x) upsert("validation_rule", { ...x, ...patch }); },
+    deleteRule: (id) => { remove("validation_rule", id); },
+    addExecution: (e) => upsert("execution", { ...e, id: rid("EX") }),
+    updateExecution: (id, patch) => { const x = find<data.ExecutionRecord>("execution", id); if (x) upsert("execution", { ...x, ...patch }); },
+    updateIntegration: (id, patch) => { const x = find<data.IntegrationEndpoint>("integration", id); if (x) upsert("integration", { ...x, ...patch }); },
+    importRecipes: async (rs) => {
+      const { error } = await supabase.from("recipes").insert(rs.map((r) => ({
+        code: r.code, name: r.name, project: r.project || "Imported", version: r.version || "v1.0", status: "draft",
+        classification: r.classification || "Imported", target_yield: (r.targetYield ?? { value: 100, unit: "kg" }) as never,
+        items: (r.items ?? []) as never, process: (r.process ?? []) as never,
+        compliance: (r.compliance ?? { hazards: [], allergens: [], storageMaxC: 25, shelfLifeDays: 0 }) as never, created_by: userId,
+      })));
+      if (error) { toast.error(errMsg(error)); return 0; }
+      supabase.rpc("log_event", { _action: "IMPORT", _entity: "recipes", _property: "count", _after: String(rs.length) });
+      await Promise.all([loadRecipes(), loadAudit()]);
       return rs.length;
     },
-
-    addMaterial: (m) => setMaterials((prev) => [{ ...m, id: rid("MAT"), updatedAt: nowStamp() }, ...prev]),
-    updateMaterial: (id, patch) => setMaterials((prev) => prev.map((x) => x.id === id ? { ...x, ...patch, updatedAt: nowStamp() } : x)),
-    deleteMaterial: (id) => setMaterials((prev) => prev.filter((x) => x.id !== id)),
-
-    addRecipe: (r) => setRecipes((prev) => [{
-      ...r, id: rid("REC"), updatedAt: nowStamp(),
-      items: r.items ?? [], process: r.process ?? [], approvedBy: [],
-    } as data.Recipe, ...prev]),
-    updateRecipe: (id, patch) => setRecipes((prev) => prev.map((r) => r.id === id ? { ...r, ...patch, updatedAt: nowStamp() } : r)),
-    deleteRecipe: (id) => setRecipes((prev) => prev.filter((r) => r.id !== id)),
-
-    addRecipeItem: (recipeId, it) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(),
-      items: [...r.items, { ...it, id: `it_${Date.now().toString(36)}` }],
-    })),
-    updateRecipeItem: (recipeId, itemId, patch) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(),
-      items: r.items.map((it) => it.id === itemId ? { ...it, ...patch } : it),
-    })),
-    removeRecipeItem: (recipeId, itemId) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(), items: r.items.filter((it) => it.id !== itemId),
-    })),
-
-    addProcessStep: (recipeId, p) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(),
-      process: [...r.process, { ...p, seq: (r.process.at(-1)?.seq ?? 0) + 1 }],
-    })),
-    updateProcessStep: (recipeId, seq, patch) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(),
-      process: r.process.map((p) => p.seq === seq ? { ...p, ...patch } : p),
-    })),
-    removeProcessStep: (recipeId, seq) => setRecipes((prev) => prev.map((r) => r.id !== recipeId ? r : {
-      ...r, updatedAt: nowStamp(),
-      process: r.process.filter((p) => p.seq !== seq).map((p, i) => ({ ...p, seq: i + 1 })),
-    })),
-
-    addTrial: (t) => setTrials((prev) => [{ ...t, id: rid("TR"), loggedAt: nowStampFull() }, ...prev]),
-    updateTrial: (id, patch) => setTrials((prev) => prev.map((t) => t.id === id ? { ...t, ...patch } : t)),
-    deleteTrial: (id) => setTrials((prev) => prev.filter((t) => t.id !== id)),
-
-    addApiKey: (k) => setApiKeys((prev) => [{
-      ...k, id: rid("KEY"), createdAt: nowStamp(), lastUsed: null, active: true, callsToday: 0,
-      tokenPreview: `rms_live_${Math.random().toString(36).slice(2, 10)}…${Math.random().toString(36).slice(2, 6)}`,
-    }, ...prev]),
-    revokeKey: (id) => setApiKeys((prev) => prev.map((k) => k.id === id ? { ...k, active: false } : k)),
-    deleteApiKey: (id) => setApiKeys((prev) => prev.filter((k) => k.id !== id)),
-
-    addSchema: (s) => setSchemas((prev) => [...prev, { ...s, id: rid("sch"), fields: [] }]),
-    updateSchema: (id, patch) => setSchemas((prev) => prev.map((s) => s.id === id ? { ...s, ...patch } : s)),
-    deleteSchema: (id) => setSchemas((prev) => prev.filter((s) => s.id !== id)),
-    addSchemaField: (schemaId, f) => setSchemas((prev) => prev.map((s) => s.id !== schemaId ? s : { ...s, fields: [...s.fields, f] })),
-    updateSchemaField: (schemaId, key, patch) => setSchemas((prev) => prev.map((s) => s.id !== schemaId ? s : {
-      ...s, fields: s.fields.map((f) => f.key === key ? { ...f, ...patch } : f),
-    })),
-    removeSchemaField: (schemaId, key) => setSchemas((prev) => prev.map((s) => s.id !== schemaId ? s : {
-      ...s, fields: s.fields.filter((f) => f.key !== key),
-    })),
-
-    addUnit: (u) => setUnits((prev) => [...prev, { ...u, id: rid("u") }]),
-    updateUnit: (id, patch) => setUnits((prev) => prev.map((u) => u.id === id ? { ...u, ...patch } : u)),
-    deleteUnit: (id) => setUnits((prev) => prev.filter((u) => u.id !== id)),
-
-    addUser: (u) => setUsers((prev) => [...prev, { ...u, id: rid("u"), lastActive: "—" }]),
-    updateUser: (id, patch) => setUsers((prev) => prev.map((u) => u.id === id ? { ...u, ...patch } : u)),
-    deleteUser: (id) => setUsers((prev) => prev.filter((u) => u.id !== id)),
-
-    moveGate: (recipeId, next) => setRecipes((prev) => prev.map((r) => r.id === recipeId ? { ...r, status: next, updatedAt: nowStamp() } : r)),
-  }), [role, actor, materials, recipes, trials, apiKeys, schemas, units, users, audit, rules, executions, integrations]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [session, ready, userId, roles, role, actor, can, refresh, records, recipes, users, audit, upsert, remove, patchRecipe, loadRecipes, loadAudit, loadUsers]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

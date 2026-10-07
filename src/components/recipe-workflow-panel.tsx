@@ -16,9 +16,9 @@ export function RecipeWorkflowPanel({ recipe }: { recipe: Recipe }) {
   const actions = (Object.keys(ACTION_META) as WorkflowAction[]).filter((a) => ACTION_META[a].from.includes(recipe.status));
   const history = audit.filter((a) => a.entity === recipe.id);
 
-  const run = () => {
+  const run = async () => {
     if (!pending) return;
-    const res = transition(recipe.id, pending, reason);
+    const res = await transition(recipe.id, pending, reason);
     if (res.ok) { toast.success(`${ACTION_META[pending].label} · done`); setPending(null); setReason(""); }
     else toast.error(res.error);
   };
@@ -38,7 +38,7 @@ export function RecipeWorkflowPanel({ recipe }: { recipe: Recipe }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-primary" /> Workflow &amp; validation</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">Acting as <span className="text-foreground">{actor}</span> · {role}. Author: {recipe.createdBy}{recipe.approvedBy.length ? ` · Approved by ${recipe.approvedBy.join(", ")}` : ""}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Signed in as <span className="text-foreground">{actor}</span> · {role}. Author: {recipe.createdBy}{recipe.approvedBy.length ? ` · Approved by ${recipe.approvedBy.join(", ")}` : ""}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {actions.map((a) => {
@@ -54,11 +54,11 @@ export function RecipeWorkflowPanel({ recipe }: { recipe: Recipe }) {
             );
           })}
           {can("recipe.version") && ["released", "approved", "superseded", "rejected"].includes(recipe.status) && (
-            <button onClick={() => { const id = newVersion(recipe.id, "New revision"); if (id) navigate({ to: "/recipes/$id", params: { id } }); }}
+            <button onClick={async () => { const id = await newVersion(recipe.id, "New revision"); if (id) navigate({ to: "/recipes/$id", params: { id } }); }}
               className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs hover:text-primary"><GitBranch className="h-3 w-3" /> New version</button>
           )}
           {can("recipe.copy") && (
-            <button onClick={() => { const id = copyRecipe(recipe.id); if (id) navigate({ to: "/recipes/$id", params: { id } }); }}
+            <button onClick={async () => { const id = await copyRecipe(recipe.id); if (id) navigate({ to: "/recipes/$id", params: { id } }); }}
               className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs hover:text-primary"><Copy className="h-3 w-3" /> Copy</button>
           )}
           {can("recipe.download") && (

@@ -19,6 +19,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchemasRouteImport } from './routes/schemas'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as RetentionRouteImport } from './routes/retention'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as ExecutionRouteImport } from './routes/execution'
@@ -79,6 +80,11 @@ const RolesRoute = RolesRouteImport.update({
 const RetentionRoute = RetentionRouteImport.update({
   id: '/retention',
   path: '/retention',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/retention': typeof RetentionRoute
   '/roles': typeof RolesRoute
   '/schemas': typeof SchemasRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/reset-password'
     | '/retention'
     | '/roles'
     | '/schemas'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/reset-password'
     | '/retention'
     | '/roles'
     | '/schemas'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/execution'
     | '/integrations'
     | '/materials'
+    | '/reset-password'
     | '/retention'
     | '/roles'
     | '/schemas'
@@ -289,6 +301,7 @@ export interface RootRouteChildren {
   ExecutionRoute: typeof ExecutionRoute
   IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RetentionRoute: typeof RetentionRoute
   RolesRoute: typeof RolesRoute
   SchemasRoute: typeof SchemasRoute
@@ -373,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/retention'
       fullPath: '/retention'
       preLoaderRoute: typeof RetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/materials': {
@@ -465,6 +485,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutionRoute: ExecutionRoute,
   IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RetentionRoute: RetentionRoute,
   RolesRoute: RolesRoute,
   SchemasRoute: SchemasRoute,

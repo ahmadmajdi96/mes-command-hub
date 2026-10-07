@@ -101,9 +101,9 @@ export function AppSidebar() {
         <div className="rounded-xl border border-border/60 bg-card/60 p-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center gap-2 text-xs">
             <span className="status-dot animate-pulse-glow text-success" />
-            <span className="font-medium">Sandbox live</span>
+            <span className="font-medium">Connected</span>
           </div>
-          <p className="mt-1 text-[10px] text-muted-foreground">Formulator online · 4 projects</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">Data saved to Lovable Cloud</p>
         </div>
       </SidebarFooter>
     </Sidebar>
