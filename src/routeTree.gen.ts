@@ -9,111 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiKeysRouteImport } from './routes/api-keys'
-import { Route as AuditRouteImport } from './routes/audit'
-import { Route as BranchesRouteImport } from './routes/branches'
-import { Route as CompareRouteImport } from './routes/compare'
-import { Route as DataExchangeRouteImport } from './routes/data-exchange'
-import { Route as ExecutionRouteImport } from './routes/execution'
-import { Route as IntegrationsRouteImport } from './routes/integrations'
-import { Route as MaterialsRouteImport } from './routes/materials'
-import { Route as RetentionRouteImport } from './routes/retention'
-import { Route as RolesRouteImport } from './routes/roles'
-import { Route as SchemasRouteImport } from './routes/schemas'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as TraceabilityRouteImport } from './routes/traceability'
-import { Route as TrialsRouteImport } from './routes/trials'
-import { Route as UnitsRouteImport } from './routes/units'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as ValidationRouteImport } from './routes/validation'
 import { Route as WorkflowsRouteImport } from './routes/workflows'
+import { Route as ValidationRouteImport } from './routes/validation'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as UnitsRouteImport } from './routes/units'
+import { Route as TrialsRouteImport } from './routes/trials'
+import { Route as TraceabilityRouteImport } from './routes/traceability'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SchemasRouteImport } from './routes/schemas'
+import { Route as RolesRouteImport } from './routes/roles'
+import { Route as RetentionRouteImport } from './routes/retention'
+import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as ExecutionRouteImport } from './routes/execution'
+import { Route as DataExchangeRouteImport } from './routes/data-exchange'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as BranchesRouteImport } from './routes/branches'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as ApiKeysRouteImport } from './routes/api-keys'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiKeysRoute = ApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuditRoute = AuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BranchesRoute = BranchesRouteImport.update({
-  id: '/branches',
-  path: '/branches',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareRoute = CompareRouteImport.update({
-  id: '/compare',
-  path: '/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataExchangeRoute = DataExchangeRouteImport.update({
-  id: '/data-exchange',
-  path: '/data-exchange',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExecutionRoute = ExecutionRouteImport.update({
-  id: '/execution',
-  path: '/execution',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrationsRoute = IntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaterialsRoute = MaterialsRouteImport.update({
-  id: '/materials',
-  path: '/materials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RetentionRoute = RetentionRouteImport.update({
-  id: '/retention',
-  path: '/retention',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RolesRoute = RolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SchemasRoute = SchemasRouteImport.update({
-  id: '/schemas',
-  path: '/schemas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TraceabilityRoute = TraceabilityRouteImport.update({
-  id: '/traceability',
-  path: '/traceability',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrialsRoute = TrialsRouteImport.update({
-  id: '/trials',
-  path: '/trials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UnitsRoute = UnitsRouteImport.update({
-  id: '/units',
-  path: '/units',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const WorkflowsRoute = WorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ValidationRoute = ValidationRouteImport.update({
@@ -121,9 +41,89 @@ const ValidationRoute = ValidationRouteImport.update({
   path: '/validation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WorkflowsRoute = WorkflowsRouteImport.update({
-  id: '/workflows',
-  path: '/workflows',
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnitsRoute = UnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialsRoute = TrialsRouteImport.update({
+  id: '/trials',
+  path: '/trials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TraceabilityRoute = TraceabilityRouteImport.update({
+  id: '/traceability',
+  path: '/traceability',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchemasRoute = SchemasRouteImport.update({
+  id: '/schemas',
+  path: '/schemas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RolesRoute = RolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetentionRoute = RetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutionRoute = ExecutionRouteImport.update({
+  id: '/execution',
+  path: '/execution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataExchangeRoute = DataExchangeRouteImport.update({
+  id: '/data-exchange',
+  path: '/data-exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKeysRoute = ApiKeysRouteImport.update({
+  id: '/api-keys',
+  path: '/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
@@ -305,123 +305,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api-keys': {
-      id: '/api-keys'
-      path: '/api-keys'
-      fullPath: '/api-keys'
-      preLoaderRoute: typeof ApiKeysRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/audit': {
-      id: '/audit'
-      path: '/audit'
-      fullPath: '/audit'
-      preLoaderRoute: typeof AuditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/branches': {
-      id: '/branches'
-      path: '/branches'
-      fullPath: '/branches'
-      preLoaderRoute: typeof BranchesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare': {
-      id: '/compare'
-      path: '/compare'
-      fullPath: '/compare'
-      preLoaderRoute: typeof CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-exchange': {
-      id: '/data-exchange'
-      path: '/data-exchange'
-      fullPath: '/data-exchange'
-      preLoaderRoute: typeof DataExchangeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/execution': {
-      id: '/execution'
-      path: '/execution'
-      fullPath: '/execution'
-      preLoaderRoute: typeof ExecutionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrations': {
-      id: '/integrations'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof IntegrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/materials': {
-      id: '/materials'
-      path: '/materials'
-      fullPath: '/materials'
-      preLoaderRoute: typeof MaterialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/retention': {
-      id: '/retention'
-      path: '/retention'
-      fullPath: '/retention'
-      preLoaderRoute: typeof RetentionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roles': {
-      id: '/roles'
-      path: '/roles'
-      fullPath: '/roles'
-      preLoaderRoute: typeof RolesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/schemas': {
-      id: '/schemas'
-      path: '/schemas'
-      fullPath: '/schemas'
-      preLoaderRoute: typeof SchemasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/traceability': {
-      id: '/traceability'
-      path: '/traceability'
-      fullPath: '/traceability'
-      preLoaderRoute: typeof TraceabilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trials': {
-      id: '/trials'
-      path: '/trials'
-      fullPath: '/trials'
-      preLoaderRoute: typeof TrialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/units': {
-      id: '/units'
-      path: '/units'
-      fullPath: '/units'
-      preLoaderRoute: typeof UnitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
+    '/workflows': {
+      id: '/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof WorkflowsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/validation': {
@@ -431,11 +319,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ValidationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/workflows': {
-      id: '/workflows'
-      path: '/workflows'
-      fullPath: '/workflows'
-      preLoaderRoute: typeof WorkflowsRouteImport
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/units': {
+      id: '/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof UnitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trials': {
+      id: '/trials'
+      path: '/trials'
+      fullPath: '/trials'
+      preLoaderRoute: typeof TrialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/traceability': {
+      id: '/traceability'
+      path: '/traceability'
+      fullPath: '/traceability'
+      preLoaderRoute: typeof TraceabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schemas': {
+      id: '/schemas'
+      path: '/schemas'
+      fullPath: '/schemas'
+      preLoaderRoute: typeof SchemasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roles': {
+      id: '/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof RolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retention': {
+      id: '/retention'
+      path: '/retention'
+      fullPath: '/retention'
+      preLoaderRoute: typeof RetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/execution': {
+      id: '/execution'
+      path: '/execution'
+      fullPath: '/execution'
+      preLoaderRoute: typeof ExecutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-exchange': {
+      id: '/data-exchange'
+      path: '/data-exchange'
+      fullPath: '/data-exchange'
+      preLoaderRoute: typeof DataExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-keys': {
+      id: '/api-keys'
+      path: '/api-keys'
+      fullPath: '/api-keys'
+      preLoaderRoute: typeof ApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/': {
