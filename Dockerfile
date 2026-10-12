@@ -5,5 +5,5 @@ WORKDIR /app
 COPY package.json bun.lock* bunfig.toml* ./
 RUN bun install --frozen-lockfile || bun install
 COPY . .
-EXPOSE 8112
-CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8112"]
+EXPOSE 8121
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8121"]
