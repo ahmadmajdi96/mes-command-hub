@@ -12,4 +12,4 @@
 - Recipes live in table `recipes`; other entities in `rms_records` (kind + jsonb). Audit is written only by DB triggers/security-definer functions.
 - Whole app is gated by the in-root Gate (session + at least one role); first account to sign up becomes RMS Administrator via ensure_profile().
 - Technical documentation uses browser-safe structured chapters and screenshots served from public/docs (works self-hosted) in a public (ungated) route listed in PUBLIC_PATHS in __root.tsx; keep implementation claims separate from verified workflows so the handbook remains maintainable and honest.
-- Self-hosting: Dockerfile + docker-compose.yml run the Vite dev server on port 8112 with .env; vite allowedHosts is open so any server domain works.
+- Self-hosting: Dockerfile + docker-compose.yml run the Vite dev server on port 8121 with .env; vite allowedHosts is open so any server domain (e.g. rms.manuqube.com) works.
