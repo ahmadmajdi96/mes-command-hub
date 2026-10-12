@@ -134,3 +134,18 @@
   50% { box-shadow: 0 0 0 6px oklch(0.72 0.18 155 / 0%); }
 }
 @utility animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+@media print {
+  body:has(.docs-root) { background-image: none; }
+  body:has(.docs-root) [data-sidebar],
+  body:has(.docs-root) header:not(.docs-header):not(.docs-chapter header),
+  .docs-toc, .docs-actions, .docs-pagination, .docs-single,
+  .docs-figure button { display: none !important; }
+  .docs-all { display: block !important; }
+  .docs-layout { display: block; }
+  .docs-chapter { break-before: page; margin-bottom: 2rem; }
+  .docs-chapter:first-child { break-before: auto; }
+  .docs-figure > div { max-height: none; overflow: visible; }
+  .docs-chapter h2, .docs-chapter h3 { break-after: avoid; }
+  .docs-chapter li, .docs-chapter dl > div { break-inside: avoid; }
+}
