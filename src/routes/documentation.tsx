@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { documentationSections, type DocumentationSection, type DocumentationGroup } from "@/lib/documentation/content";
 import { documentationScreenshots } from "@/lib/documentation/screenshots";
+import { documentationDiagrams } from "@/lib/documentation/diagrams";
+import { WorkflowDiagram } from "@/components/workflow-diagram";
 
 export const Route = createFileRoute("/documentation")({
   validateSearch: (search: Record<string, unknown>): { chapter?: string } => ({
@@ -37,6 +39,7 @@ function Chapter({ section, onExpand }: { section: DocumentationSection; onExpan
         {section.path && <p className="mt-2 break-all font-mono text-xs text-primary">Screen: {section.path}</p>}
       </header>
       {section.paragraphs.length > 0 && <div className="space-y-4">{section.paragraphs.map((p, i) => <p key={i} className="break-words text-sm leading-7 text-foreground/90">{p}</p>)}</div>}
+      {documentationDiagrams[section.id] && <WorkflowDiagram diagram={documentationDiagrams[section.id]!} />}
       {section.steps.length > 0 && <section aria-label="Workflow steps">
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold"><List className="h-4 w-4 text-primary" />Step-by-step workflow</h3>
         <ol className="space-y-0">{section.steps.map((step, i) => <li key={i} className="grid grid-cols-[32px_1fr] gap-3 border-t border-border/60 py-4 first:border-t-0 first:pt-0">
@@ -95,7 +98,7 @@ function Documentation() {
         <div className="min-w-0">
           <p className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase text-primary"><BookOpen className="h-4 w-4" />Cortanex RMS / Knowledge base</p>
           <h1 className="font-display text-3xl font-semibold">Technical Documentation</h1>
-          <p className="mt-2 text-xs text-muted-foreground">33 chapters · Illustrated workflows · Reviewed 12 October 2026</p>
+          <p className="mt-2 text-xs text-muted-foreground">33 chapters · Workflow diagrams · Illustrated workflows · Reviewed 12 October 2026</p>
         </div>
         <div className="docs-actions flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setFull((v) => !v)} aria-pressed={full}><BookOpen />{full ? "Chapter view" : "Full handbook"}</Button>
