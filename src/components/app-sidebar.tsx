@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Sparkles,
   LayoutDashboard, FlaskConical, Boxes, GitCompareArrows, GitBranch,
   ClipboardList, Beaker, Workflow, KeyRound, History, Database, Ruler,
-  ShieldCheck, Users, Settings, Archive, Factory, Route as RouteIcon, Plug, ArrowLeftRight, ListChecks,
+  ShieldCheck, Users, Settings, Archive, Factory, Route as RouteIcon, Plug, ArrowLeftRight, ListChecks, BookOpen,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -44,6 +44,7 @@ const security = [
   { title: "Users & Roles", url: "/users", icon: Users },
   { title: "Role Matrix", url: "/roles", icon: ShieldCheck },
   { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Technical Documentation", url: "/documentation", icon: BookOpen },
 ];
 
 export function AppSidebar() {

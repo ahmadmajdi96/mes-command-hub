@@ -15,6 +15,7 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DataExchangeRouteImport } from './routes/data-exchange'
+import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as ExecutionRouteImport } from './routes/execution'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as MaterialsRouteImport } from './routes/materials'
@@ -65,6 +66,11 @@ const CompareRoute = CompareRouteImport.update({
 const DataExchangeRoute = DataExchangeRouteImport.update({
   id: '/data-exchange',
   path: '/data-exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentationRoute = DocumentationRouteImport.update({
+  id: '/documentation',
+  path: '/documentation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExecutionRoute = ExecutionRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
   '/data-exchange': typeof DataExchangeRoute
+  '/documentation': typeof DocumentationRoute
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
   '/data-exchange': typeof DataExchangeRoute
+  '/documentation': typeof DocumentationRoute
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/branches': typeof BranchesRoute
   '/compare': typeof CompareRoute
   '/data-exchange': typeof DataExchangeRoute
+  '/documentation': typeof DocumentationRoute
   '/execution': typeof ExecutionRoute
   '/integrations': typeof IntegrationsRoute
   '/materials': typeof MaterialsRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/branches'
     | '/compare'
     | '/data-exchange'
+    | '/documentation'
     | '/execution'
     | '/integrations'
     | '/materials'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/branches'
     | '/compare'
     | '/data-exchange'
+    | '/documentation'
     | '/execution'
     | '/integrations'
     | '/materials'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/branches'
     | '/compare'
     | '/data-exchange'
+    | '/documentation'
     | '/execution'
     | '/integrations'
     | '/materials'
@@ -358,6 +370,7 @@ export interface RootRouteChildren {
   BranchesRoute: typeof BranchesRoute
   CompareRoute: typeof CompareRoute
   DataExchangeRoute: typeof DataExchangeRoute
+  DocumentationRoute: typeof DocumentationRoute
   ExecutionRoute: typeof ExecutionRoute
   IntegrationsRoute: typeof IntegrationsRoute
   MaterialsRoute: typeof MaterialsRoute
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/data-exchange'
       fullPath: '/data-exchange'
       preLoaderRoute: typeof DataExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentation': {
+      id: '/documentation'
+      path: '/documentation'
+      fullPath: '/documentation'
+      preLoaderRoute: typeof DocumentationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/execution': {
@@ -582,6 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   BranchesRoute: BranchesRoute,
   CompareRoute: CompareRoute,
   DataExchangeRoute: DataExchangeRoute,
+  DocumentationRoute: DocumentationRoute,
   ExecutionRoute: ExecutionRoute,
   IntegrationsRoute: IntegrationsRoute,
   MaterialsRoute: MaterialsRoute,

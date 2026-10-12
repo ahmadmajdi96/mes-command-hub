@@ -17,6 +17,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "R&D Control Center · Cortanex RMS" },
       { name: "description", content: "Overview of active recipes, pipeline gates, trial outcomes and API activity across R&D projects." },
+      { property: "og:title", content: "R&D Control Center · Cortanex RMS" },
+      { property: "og:description", content: "Overview of active recipes, pipeline gates, trial outcomes and API activity across R&D projects." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,

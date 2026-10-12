@@ -5,3 +5,4 @@
 - [x] Phase 3: step-by-step batch run, trace filters/export, import templates + preview, Excel
 - [x] Phase 4: live external API with hashed keys, outbound publishing, message log + retry, health checks
 - [x] Phase 5: role task panels, retention/legal hold, settings, profile, access-denied, idle sign-out
+- [x] Add separate technical documentation page with actual screenshots, all page workflows, architecture, API and operational limitations.
