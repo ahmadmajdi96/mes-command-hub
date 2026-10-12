@@ -55,7 +55,7 @@ function QaInsights() {
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs text-muted-foreground">Batch records</div><div className="text-2xl font-semibold">{list.length}</div></div>
         <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs text-muted-foreground">With deviations / QC fail</div><div className="text-2xl font-semibold text-warning">{flagged}</div></div>
-        <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs text-muted-foreground">Model</div><div className="text-sm font-medium">Lovable AI</div></div>
+        <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs text-muted-foreground">Model</div><div className="text-sm font-medium">AI Gateway</div></div>
       </div>
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground">Recipe
