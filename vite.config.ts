@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Self-hosted (Docker) access via any domain/IP.
+    server: { allowedHosts: true },
+  },
 });
