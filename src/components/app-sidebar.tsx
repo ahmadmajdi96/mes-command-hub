@@ -106,7 +106,7 @@ export function AppSidebar() {
             <span className="status-dot animate-pulse-glow text-success" />
             <span className="font-medium">Connected</span>
           </div>
-          <p className="mt-1 text-[10px] text-muted-foreground">Data saved to Lovable Cloud</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">Data saved to cloud backend</p>
         </div>
       </SidebarFooter>
     </Sidebar>
