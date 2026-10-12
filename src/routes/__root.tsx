@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet, Link, createRootRouteWithContext, useRouter,
+  Outlet, Link, createRootRouteWithContext, useRouter, useRouterState,
   HeadContent, Scripts, type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -181,12 +181,16 @@ function Gate({ children }: { children: ReactNode }) {
   );
 }
 
+const PUBLIC_PATHS = ["/documentation"];
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isPublic = PUBLIC_PATHS.includes(pathname);
   return (
     <QueryClientProvider client={queryClient}>
       <RmsStoreProvider>
-        <Gate><Outlet /></Gate>
+        {isPublic ? <main className="min-h-screen p-4 sm:p-6"><Outlet /></main> : <Gate><Outlet /></Gate>}
         <Toaster theme="dark" position="bottom-right" richColors />
       </RmsStoreProvider>
     </QueryClientProvider>
